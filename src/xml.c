@@ -4,14 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cmark.h"
+#include "cssg.h"
 #include "node.h"
 #include "buffer.h"
 
 #define BUFFER_SIZE 100
 #define MAX_INDENT 40
 
-// Functions to convert cmark_nodes to XML strings.
+// Functions to convert cssg_nodes to XML strings.
 
 // C0 control characters, U+FFFE and U+FFF aren't allowed in XML.
 static const char XML_ESCAPE_TABLE[256] = {
@@ -40,7 +40,7 @@ static const char *XML_ESCAPES[] = {
   "", UTF8_REPL, "&quot;", "&amp;", "&lt;", "&gt;"
 };
 
-static void escape_xml(cmark_strbuf *ob, const unsigned char *src,
+static void escape_xml(cssg_strbuf *ob, const unsigned char *src,
                        bufsize_t size) {
   bufsize_t i = 0, org, esc = 0;
 
@@ -50,7 +50,7 @@ static void escape_xml(cmark_strbuf *ob, const unsigned char *src,
       i++;
 
     if (i > org)
-      cmark_strbuf_put(ob, src + org, i - org);
+      cssg_strbuf_put(ob, src + org, i - org);
 
     if (i >= size)
       break;
@@ -60,129 +60,129 @@ static void escape_xml(cmark_strbuf *ob, const unsigned char *src,
       // be changed.
       // We know that src[i] is 0xBE or 0xBF.
       if (i >= 2 && src[i-2] == 0xEF && src[i-1] == 0xBF) {
-        cmark_strbuf_putc(ob, 0xBD);
+        cssg_strbuf_putc(ob, 0xBD);
       } else {
-        cmark_strbuf_putc(ob, src[i]);
+        cssg_strbuf_putc(ob, src[i]);
       }
     } else {
-      cmark_strbuf_puts(ob, XML_ESCAPES[esc]);
+      cssg_strbuf_puts(ob, XML_ESCAPES[esc]);
     }
 
     i++;
   }
 }
 
-static void escape_xml_str(cmark_strbuf *dest, const unsigned char *source) {
+static void escape_xml_str(cssg_strbuf *dest, const unsigned char *source) {
   if (source)
     escape_xml(dest, source, (bufsize_t)strlen((char *)source));
 }
 
 struct render_state {
-  cmark_strbuf *xml;
+  cssg_strbuf *xml;
   int indent;
 };
 
 static inline void indent(struct render_state *state) {
   int i;
   for (i = 0; i < state->indent && i < MAX_INDENT; i++) {
-    cmark_strbuf_putc(state->xml, ' ');
+    cssg_strbuf_putc(state->xml, ' ');
   }
 }
 
-static int S_render_node(cmark_node *node, cmark_event_type ev_type,
+static int S_render_node(cssg_node *node, cssg_event_type ev_type,
                          struct render_state *state, int options) {
-  cmark_strbuf *xml = state->xml;
+  cssg_strbuf *xml = state->xml;
   bool literal = false;
-  cmark_delim_type delim;
-  bool entering = (ev_type == CMARK_EVENT_ENTER);
+  cssg_delim_type delim;
+  bool entering = (ev_type == CSSG_EVENT_ENTER);
   char buffer[BUFFER_SIZE];
 
   if (entering) {
     indent(state);
-    cmark_strbuf_putc(xml, '<');
-    cmark_strbuf_puts(xml, cmark_node_get_type_string(node));
+    cssg_strbuf_putc(xml, '<');
+    cssg_strbuf_puts(xml, cssg_node_get_type_string(node));
 
-    if (options & CMARK_OPT_SOURCEPOS && node->start_line != 0) {
+    if (options & CSSG_OPT_SOURCEPOS && node->start_line != 0) {
       snprintf(buffer, BUFFER_SIZE, " sourcepos=\"%d:%d-%d:%d\"",
                node->start_line, node->start_column, node->end_line,
                node->end_column);
-      cmark_strbuf_puts(xml, buffer);
+      cssg_strbuf_puts(xml, buffer);
     }
 
     literal = false;
 
     switch (node->type) {
-    case CMARK_NODE_DOCUMENT:
-      cmark_strbuf_puts(xml, " xmlns=\"http://commonmark.org/xml/1.0\"");
+    case CSSG_NODE_DOCUMENT:
+      cssg_strbuf_puts(xml, " xmlns=\"http://commonmark.org/xml/1.0\"");
       break;
-    case CMARK_NODE_TEXT:
-    case CMARK_NODE_CODE:
-    case CMARK_NODE_HTML_BLOCK:
-    case CMARK_NODE_HTML_INLINE:
-      cmark_strbuf_puts(xml, " xml:space=\"preserve\">");
+    case CSSG_NODE_TEXT:
+    case CSSG_NODE_CODE:
+    case CSSG_NODE_HTML_BLOCK:
+    case CSSG_NODE_HTML_INLINE:
+      cssg_strbuf_puts(xml, " xml:space=\"preserve\">");
       escape_xml(xml, node->data, node->len);
-      cmark_strbuf_puts(xml, "</");
-      cmark_strbuf_puts(xml, cmark_node_get_type_string(node));
+      cssg_strbuf_puts(xml, "</");
+      cssg_strbuf_puts(xml, cssg_node_get_type_string(node));
       literal = true;
       break;
-    case CMARK_NODE_LIST:
-      switch (cmark_node_get_list_type(node)) {
-      case CMARK_ORDERED_LIST:
-        cmark_strbuf_puts(xml, " type=\"ordered\"");
+    case CSSG_NODE_LIST:
+      switch (cssg_node_get_list_type(node)) {
+      case CSSG_ORDERED_LIST:
+        cssg_strbuf_puts(xml, " type=\"ordered\"");
         snprintf(buffer, BUFFER_SIZE, " start=\"%d\"",
-                 cmark_node_get_list_start(node));
-        cmark_strbuf_puts(xml, buffer);
-        delim = cmark_node_get_list_delim(node);
-        if (delim == CMARK_PAREN_DELIM) {
-          cmark_strbuf_puts(xml, " delim=\"paren\"");
-        } else if (delim == CMARK_PERIOD_DELIM) {
-          cmark_strbuf_puts(xml, " delim=\"period\"");
+                 cssg_node_get_list_start(node));
+        cssg_strbuf_puts(xml, buffer);
+        delim = cssg_node_get_list_delim(node);
+        if (delim == CSSG_PAREN_DELIM) {
+          cssg_strbuf_puts(xml, " delim=\"paren\"");
+        } else if (delim == CSSG_PERIOD_DELIM) {
+          cssg_strbuf_puts(xml, " delim=\"period\"");
         }
         break;
-      case CMARK_BULLET_LIST:
-        cmark_strbuf_puts(xml, " type=\"bullet\"");
+      case CSSG_BULLET_LIST:
+        cssg_strbuf_puts(xml, " type=\"bullet\"");
         break;
       default:
         break;
       }
       snprintf(buffer, BUFFER_SIZE, " tight=\"%s\"",
-               (cmark_node_get_list_tight(node) ? "true" : "false"));
-      cmark_strbuf_puts(xml, buffer);
+               (cssg_node_get_list_tight(node) ? "true" : "false"));
+      cssg_strbuf_puts(xml, buffer);
       break;
-    case CMARK_NODE_HEADING:
+    case CSSG_NODE_HEADING:
       snprintf(buffer, BUFFER_SIZE, " level=\"%d\"", node->as.heading.level);
-      cmark_strbuf_puts(xml, buffer);
+      cssg_strbuf_puts(xml, buffer);
       break;
-    case CMARK_NODE_CODE_BLOCK:
+    case CSSG_NODE_CODE_BLOCK:
       if (node->as.code.info) {
-        cmark_strbuf_puts(xml, " info=\"");
+        cssg_strbuf_puts(xml, " info=\"");
         escape_xml_str(xml, node->as.code.info);
-        cmark_strbuf_putc(xml, '"');
+        cssg_strbuf_putc(xml, '"');
       }
-      cmark_strbuf_puts(xml, " xml:space=\"preserve\">");
+      cssg_strbuf_puts(xml, " xml:space=\"preserve\">");
       escape_xml(xml, node->data, node->len);
-      cmark_strbuf_puts(xml, "</");
-      cmark_strbuf_puts(xml, cmark_node_get_type_string(node));
+      cssg_strbuf_puts(xml, "</");
+      cssg_strbuf_puts(xml, cssg_node_get_type_string(node));
       literal = true;
       break;
-    case CMARK_NODE_CUSTOM_BLOCK:
-    case CMARK_NODE_CUSTOM_INLINE:
-      cmark_strbuf_puts(xml, " on_enter=\"");
+    case CSSG_NODE_CUSTOM_BLOCK:
+    case CSSG_NODE_CUSTOM_INLINE:
+      cssg_strbuf_puts(xml, " on_enter=\"");
       escape_xml_str(xml, node->as.custom.on_enter);
-      cmark_strbuf_putc(xml, '"');
-      cmark_strbuf_puts(xml, " on_exit=\"");
+      cssg_strbuf_putc(xml, '"');
+      cssg_strbuf_puts(xml, " on_exit=\"");
       escape_xml_str(xml, node->as.custom.on_exit);
-      cmark_strbuf_putc(xml, '"');
+      cssg_strbuf_putc(xml, '"');
       break;
-    case CMARK_NODE_LINK:
-    case CMARK_NODE_IMAGE:
-      cmark_strbuf_puts(xml, " destination=\"");
+    case CSSG_NODE_LINK:
+    case CSSG_NODE_IMAGE:
+      cssg_strbuf_puts(xml, " destination=\"");
       escape_xml_str(xml, node->as.link.url);
-      cmark_strbuf_putc(xml, '"');
+      cssg_strbuf_putc(xml, '"');
       if (node->as.link.title) {
-        cmark_strbuf_puts(xml, " title=\"");
+        cssg_strbuf_puts(xml, " title=\"");
         escape_xml_str(xml, node->as.link.title);
-        cmark_strbuf_putc(xml, '"');
+        cssg_strbuf_putc(xml, '"');
       }
       break;
     default:
@@ -191,39 +191,39 @@ static int S_render_node(cmark_node *node, cmark_event_type ev_type,
     if (node->first_child) {
       state->indent += 2;
     } else if (!literal) {
-      cmark_strbuf_puts(xml, " /");
+      cssg_strbuf_puts(xml, " /");
     }
-    cmark_strbuf_puts(xml, ">\n");
+    cssg_strbuf_puts(xml, ">\n");
 
   } else if (node->first_child) {
     state->indent -= 2;
     indent(state);
-    cmark_strbuf_puts(xml, "</");
-    cmark_strbuf_puts(xml, cmark_node_get_type_string(node));
-    cmark_strbuf_puts(xml, ">\n");
+    cssg_strbuf_puts(xml, "</");
+    cssg_strbuf_puts(xml, cssg_node_get_type_string(node));
+    cssg_strbuf_puts(xml, ">\n");
   }
 
   return 1;
 }
 
-char *cmark_render_xml(cmark_node *root, int options) {
+char *cssg_render_xml(cssg_node *root, int options) {
   char *result;
-  cmark_strbuf xml = CMARK_BUF_INIT(root->mem);
-  cmark_event_type ev_type;
-  cmark_node *cur;
+  cssg_strbuf xml = CSSG_BUF_INIT(root->mem);
+  cssg_event_type ev_type;
+  cssg_node *cur;
   struct render_state state = {&xml, 0};
 
-  cmark_iter *iter = cmark_iter_new(root);
+  cssg_iter *iter = cssg_iter_new(root);
 
-  cmark_strbuf_puts(state.xml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-  cmark_strbuf_puts(state.xml,
+  cssg_strbuf_puts(state.xml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+  cssg_strbuf_puts(state.xml,
                     "<!DOCTYPE document SYSTEM \"CommonMark.dtd\">\n");
-  while ((ev_type = cmark_iter_next(iter)) != CMARK_EVENT_DONE) {
-    cur = cmark_iter_get_node(iter);
+  while ((ev_type = cssg_iter_next(iter)) != CSSG_EVENT_DONE) {
+    cur = cssg_iter_get_node(iter);
     S_render_node(cur, ev_type, &state, options);
   }
-  result = (char *)cmark_strbuf_detach(&xml);
+  result = (char *)cssg_strbuf_detach(&xml);
 
-  cmark_iter_free(iter);
+  cssg_iter_free(iter);
   return result;
 }

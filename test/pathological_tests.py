@@ -9,11 +9,11 @@ import itertools
 import multiprocessing
 import queue
 import time
-from cmark import CMark
+from cssg import Cssg
 
 TIMEOUT = 5
 
-parser = argparse.ArgumentParser(description='Run cmark tests.')
+parser = argparse.ArgumentParser(description='Run cssg tests.')
 parser.add_argument('--program', dest='program', nargs='?', default=None,
         help='program to test')
 parser.add_argument('--library-dir', dest='library_dir', nargs='?',
@@ -22,7 +22,7 @@ args = parser.parse_args(sys.argv[1:])
 
 allowed_failures = {"many references": True}
 
-cmark = CMark(prog=args.program, library_dir=args.library_dir)
+cssg = Cssg(prog=args.program, library_dir=args.library_dir)
 
 def hash_collisions():
     REFMAP_SIZE = 16
@@ -125,7 +125,7 @@ pathological = {
 #                  re.compile("(\\[0\\] ){4999}"))
     }
 
-pathological_cmark = {
+pathological_cssg = {
     "nested inlines":
                  ("*" * 20000 + "a" + "*" * 20000,
                   re.compile("^\\*+a\\*+$")),
@@ -134,10 +134,10 @@ pathological_cmark = {
 whitespace_re = re.compile('/s+/')
 
 def run_pathological(q, inp):
-    q.put(cmark.to_html(inp))
+    q.put(cssg.to_html(inp))
 
-def run_pathological_cmark(q, inp):
-    q.put(cmark.to_commonmark(inp))
+def run_pathological_cssg(q, inp):
+    q.put(cssg.to_commonmark(inp))
 
 def run_tests():
     q = multiprocessing.Queue()
@@ -147,14 +147,14 @@ def run_tests():
     ignored = []
 
     print("Testing pathological cases:")
-    for description in (*pathological, *pathological_cmark):
+    for description in (*pathological, *pathological_cssg):
         if description in pathological:
             (inp, regex) = pathological[description]
             p = multiprocessing.Process(target=run_pathological,
                       args=(q, inp))
         else:
-            (inp, regex) = pathological_cmark[description]
-            p = multiprocessing.Process(target=run_pathological_cmark,
+            (inp, regex) = pathological_cssg[description]
+            p = multiprocessing.Process(target=run_pathological_cssg,
                       args=(q, inp))
         p.start()
         try:

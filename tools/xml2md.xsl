@@ -5,14 +5,14 @@
 xml2md.xsl
 ==========
 
-This XSLT stylesheet transforms the cmark XML format back to Commonmark.
+This XSLT stylesheet transforms the cssg XML format back to Commonmark.
 Since the XML output is lossy, a lossless MD->XML->MD roundtrip isn't
 possible. The XML->MD->XML roundtrip should produce the original XML,
 though.
 
 Example usage with xsltproc:
 
-    cmark -t xml doc.md | xsltproc -novalid xml2md.xsl -
+    cssg -t xml doc.md | xsltproc -novalid xml2md.xsl -
 
 -->
 

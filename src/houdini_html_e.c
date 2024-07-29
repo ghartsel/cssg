@@ -43,7 +43,7 @@ static const char HTML_ESCAPE_TABLE[] = {
 static const char *HTML_ESCAPES[] = {"",      "&quot;", "&amp;", "&#39;",
                                      "&#47;", "&lt;",   "&gt;"};
 
-int houdini_escape_html(cmark_strbuf *ob, const uint8_t *src, bufsize_t size,
+int houdini_escape_html(cssg_strbuf *ob, const uint8_t *src, bufsize_t size,
                          int secure) {
   bufsize_t i = 0, org, esc = 0;
 
@@ -53,7 +53,7 @@ int houdini_escape_html(cmark_strbuf *ob, const uint8_t *src, bufsize_t size,
       i++;
 
     if (i > org)
-      cmark_strbuf_put(ob, src + org, i - org);
+      cssg_strbuf_put(ob, src + org, i - org);
 
     /* escaping */
     if (unlikely(i >= size))
@@ -61,9 +61,9 @@ int houdini_escape_html(cmark_strbuf *ob, const uint8_t *src, bufsize_t size,
 
     /* The forward slash is only escaped in secure mode */
     if ((src[i] == '/' || src[i] == '\'') && !secure) {
-      cmark_strbuf_putc(ob, src[i]);
+      cssg_strbuf_putc(ob, src[i]);
     } else {
-      cmark_strbuf_puts(ob, HTML_ESCAPES[esc]);
+      cssg_strbuf_puts(ob, HTML_ESCAPES[esc]);
     }
 
     i++;

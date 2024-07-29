@@ -2,7 +2,7 @@
 #include "chunk.h"
 #include "scanners.h"
 
-bufsize_t _scan_at(bufsize_t (*scanner)(const unsigned char *), cmark_chunk *c, bufsize_t offset)
+bufsize_t _scan_at(bufsize_t (*scanner)(const unsigned char *), cssg_chunk *c, bufsize_t offset)
 {
 	bufsize_t res;
 	unsigned char *ptr = (unsigned char *)c->data;

@@ -1,25 +1,25 @@
 #include <stdlib.h>
 #include "buffer.h"
-#include "cmark.h"
+#include "cssg.h"
 #include "utf8.h"
 #include "render.h"
 #include "node.h"
-#include "cmark_ctype.h"
+#include "cssg_ctype.h"
 
-static inline void S_cr(cmark_renderer *renderer) {
+static inline void S_cr(cssg_renderer *renderer) {
   if (renderer->need_cr < 1) {
     renderer->need_cr = 1;
   }
 }
 
-static inline void S_blankline(cmark_renderer *renderer) {
+static inline void S_blankline(cssg_renderer *renderer) {
   if (renderer->need_cr < 2) {
     renderer->need_cr = 2;
   }
 }
 
-static void S_out(cmark_renderer *renderer, const char *source, bool wrap,
-                  cmark_escaping escape) {
+static void S_out(cssg_renderer *renderer, const char *source, bool wrap,
+                  cssg_escaping escape) {
   int length = (int)strlen(source);
   unsigned char nextc;
   int32_t c;
@@ -37,9 +37,9 @@ static void S_out(cmark_renderer *renderer, const char *source, bool wrap,
     if (k < 0 || renderer->buffer->ptr[k] == '\n') {
       k -= 1;
     } else {
-      cmark_strbuf_putc(renderer->buffer, '\n');
+      cssg_strbuf_putc(renderer->buffer, '\n');
       if (renderer->need_cr > 1) {
-        cmark_strbuf_put(renderer->buffer, renderer->prefix->ptr,
+        cssg_strbuf_put(renderer->buffer, renderer->prefix->ptr,
                          renderer->prefix->size);
       }
     }
@@ -52,13 +52,13 @@ static void S_out(cmark_renderer *renderer, const char *source, bool wrap,
 
   while (i < length) {
     if (renderer->begin_line) {
-      cmark_strbuf_put(renderer->buffer, renderer->prefix->ptr,
+      cssg_strbuf_put(renderer->buffer, renderer->prefix->ptr,
                        renderer->prefix->size);
       // note: this assumes prefix is ascii:
       renderer->column = renderer->prefix->size;
     }
 
-    len = cmark_utf8proc_iterate((const uint8_t *)source + i, length - i, &c);
+    len = cssg_utf8proc_iterate((const uint8_t *)source + i, length - i, &c);
     if (len == -1) { // error condition
       return;        // return without rendering rest of string
     }
@@ -66,7 +66,7 @@ static void S_out(cmark_renderer *renderer, const char *source, bool wrap,
     if (c == 32 && wrap) {
       if (!renderer->begin_line) {
         last_nonspace = renderer->buffer->size;
-        cmark_strbuf_putc(renderer->buffer, ' ');
+        cssg_strbuf_putc(renderer->buffer, ' ');
         renderer->column += 1;
         renderer->begin_line = false;
         renderer->begin_content = false;
@@ -76,33 +76,33 @@ static void S_out(cmark_renderer *renderer, const char *source, bool wrap,
         }
         // We don't allow breaks that make a digit the first character
         // because this causes problems with commonmark output.
-        if (!cmark_isdigit(source[i + 1])) {
+        if (!cssg_isdigit(source[i + 1])) {
           renderer->last_breakable = last_nonspace;
         }
       }
 
     } else if (escape == LITERAL) {
       if (c == 10) {
-        cmark_strbuf_putc(renderer->buffer, '\n');
+        cssg_strbuf_putc(renderer->buffer, '\n');
         renderer->column = 0;
         renderer->begin_line = true;
         renderer->begin_content = true;
         renderer->last_breakable = 0;
       } else {
-        cmark_render_code_point(renderer, c);
+        cssg_render_code_point(renderer, c);
         renderer->begin_line = false;
         // we don't set 'begin_content' to false til we've
         // finished parsing a digit.  Reason:  in commonmark
         // we need to escape a potential list marker after
         // a digit:
         renderer->begin_content =
-            renderer->begin_content && cmark_isdigit(c) == 1;
+            renderer->begin_content && cssg_isdigit(c) == 1;
       }
     } else {
       (renderer->outc)(renderer, escape, c, nextc);
       renderer->begin_line = false;
       renderer->begin_content =
-          renderer->begin_content && cmark_isdigit(c) == 1;
+          renderer->begin_content && cssg_isdigit(c) == 1;
     }
 
     // If adding the character went beyond width, look for an
@@ -119,12 +119,12 @@ static void S_out(cmark_renderer *renderer, const char *source, bool wrap,
           (unsigned char *)renderer->mem->realloc(NULL, remainder_len);
       memcpy(remainder, src, remainder_len);
       // truncate at last_breakable
-      cmark_strbuf_truncate(renderer->buffer, renderer->last_breakable);
+      cssg_strbuf_truncate(renderer->buffer, renderer->last_breakable);
       // add newline, prefix, and remainder
-      cmark_strbuf_putc(renderer->buffer, '\n');
-      cmark_strbuf_put(renderer->buffer, renderer->prefix->ptr,
+      cssg_strbuf_putc(renderer->buffer, '\n');
+      cssg_strbuf_put(renderer->buffer, renderer->prefix->ptr,
                        renderer->prefix->size);
-      cmark_strbuf_put(renderer->buffer, remainder, remainder_len);
+      cssg_strbuf_put(renderer->buffer, remainder, remainder_len);
       renderer->column = renderer->prefix->size + remainder_len;
       renderer->mem->free(remainder);
       renderer->last_breakable = 0;
@@ -137,57 +137,57 @@ static void S_out(cmark_renderer *renderer, const char *source, bool wrap,
 }
 
 // Assumes no newlines, assumes ascii content:
-void cmark_render_ascii(cmark_renderer *renderer, const char *s) {
+void cssg_render_ascii(cssg_renderer *renderer, const char *s) {
   int origsize = renderer->buffer->size;
-  cmark_strbuf_puts(renderer->buffer, s);
+  cssg_strbuf_puts(renderer->buffer, s);
   renderer->column += renderer->buffer->size - origsize;
 }
 
-void cmark_render_code_point(cmark_renderer *renderer, uint32_t c) {
-  cmark_utf8proc_encode_char(c, renderer->buffer);
+void cssg_render_code_point(cssg_renderer *renderer, uint32_t c) {
+  cssg_utf8proc_encode_char(c, renderer->buffer);
   renderer->column += 1;
 }
 
-char *cmark_render(cmark_node *root, int options, int width,
-                   void (*outc)(cmark_renderer *, cmark_escaping, int32_t,
+char *cssg_render(cssg_node *root, int options, int width,
+                   void (*outc)(cssg_renderer *, cssg_escaping, int32_t,
                                 unsigned char),
-                   int (*render_node)(cmark_renderer *renderer,
-                                      cmark_node *node,
-                                      cmark_event_type ev_type, int options)) {
-  cmark_mem *mem = root->mem;
-  cmark_strbuf pref = CMARK_BUF_INIT(mem);
-  cmark_strbuf buf = CMARK_BUF_INIT(mem);
-  cmark_node *cur;
-  cmark_event_type ev_type;
+                   int (*render_node)(cssg_renderer *renderer,
+                                      cssg_node *node,
+                                      cssg_event_type ev_type, int options)) {
+  cssg_mem *mem = root->mem;
+  cssg_strbuf pref = CSSG_BUF_INIT(mem);
+  cssg_strbuf buf = CSSG_BUF_INIT(mem);
+  cssg_node *cur;
+  cssg_event_type ev_type;
   char *result;
-  cmark_iter *iter = cmark_iter_new(root);
+  cssg_iter *iter = cssg_iter_new(root);
 
-  cmark_renderer renderer = {options,
+  cssg_renderer renderer = {options,
                              mem,    &buf,    &pref,      0,      width,
                              0,      0,       true,       true,   false,
                              false,  NULL,
                              outc,   S_cr,    S_blankline, S_out};
 
-  while ((ev_type = cmark_iter_next(iter)) != CMARK_EVENT_DONE) {
-    cur = cmark_iter_get_node(iter);
+  while ((ev_type = cssg_iter_next(iter)) != CSSG_EVENT_DONE) {
+    cur = cssg_iter_get_node(iter);
     if (!render_node(&renderer, cur, ev_type, options)) {
       // a false value causes us to skip processing
       // the node's contents.  this is used for
       // autolinks.
-      cmark_iter_reset(iter, cur, CMARK_EVENT_EXIT);
+      cssg_iter_reset(iter, cur, CSSG_EVENT_EXIT);
     }
   }
 
   // ensure final newline
   if (renderer.buffer->size == 0 || renderer.buffer->ptr[renderer.buffer->size - 1] != '\n') {
-    cmark_strbuf_putc(renderer.buffer, '\n');
+    cssg_strbuf_putc(renderer.buffer, '\n');
   }
 
-  result = (char *)cmark_strbuf_detach(renderer.buffer);
+  result = (char *)cssg_strbuf_detach(renderer.buffer);
 
-  cmark_iter_free(iter);
-  cmark_strbuf_free(renderer.prefix);
-  cmark_strbuf_free(renderer.buffer);
+  cssg_iter_free(iter);
+  cssg_strbuf_free(renderer.prefix);
+  cssg_strbuf_free(renderer.buffer);
 
   return result;
 }

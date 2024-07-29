@@ -6,7 +6,7 @@ from subprocess import Popen, PIPE
 import platform
 import os
 
-class cmark_mem(Structure):
+class cssg_mem(Structure):
     _fields_ = [("calloc", c_void_p),
                 ("realloc", c_void_p),
                 ("free", CFUNCTYPE(None, c_void_p))]
@@ -17,17 +17,17 @@ def pipe_through_prog(prog, text):
     return [p1.returncode, result.decode('utf-8'), err]
 
 def to_html(lib, text):
-    get_alloc = lib.cmark_get_default_mem_allocator
-    get_alloc.restype = POINTER(cmark_mem)
+    get_alloc = lib.cssg_get_default_mem_allocator
+    get_alloc.restype = POINTER(cssg_mem)
     free_func = get_alloc().contents.free
 
-    markdown = lib.cmark_markdown_to_html
+    markdown = lib.cssg_markdown_to_html
     markdown.restype = POINTER(c_char)
     markdown.argtypes = [c_char_p, c_size_t, c_int]
 
     textbytes = text.encode('utf-8')
     textlen = len(textbytes)
-    # 1 << 17 == CMARK_OPT_UNSAFE
+    # 1 << 17 == CSSG_OPT_UNSAFE
     cstring = markdown(textbytes, textlen, 1 << 17)
     result = string_at(cstring).decode('utf-8')
     free_func(cstring)
@@ -35,19 +35,19 @@ def to_html(lib, text):
     return [0, result, '']
 
 def to_commonmark(lib, text):
-    get_alloc = lib.cmark_get_default_mem_allocator
-    get_alloc.restype = POINTER(cmark_mem)
+    get_alloc = lib.cssg_get_default_mem_allocator
+    get_alloc.restype = POINTER(cssg_mem)
     free_func = get_alloc().contents.free
 
-    parse_document = lib.cmark_parse_document
+    parse_document = lib.cssg_parse_document
     parse_document.restype = c_void_p
     parse_document.argtypes = [c_char_p, c_size_t, c_int]
 
-    render_commonmark = lib.cmark_render_commonmark
+    render_commonmark = lib.cssg_render_commonmark
     render_commonmark.restype = POINTER(c_char)
     render_commonmark.argtypes = [c_void_p, c_int, c_int]
 
-    free_node = lib.cmark_node_free
+    free_node = lib.cssg_node_free
     free_node.argtypes = [c_void_p]
 
     textbytes = text.encode('utf-8')
@@ -60,7 +60,7 @@ def to_commonmark(lib, text):
 
     return [0, result, '']
 
-class CMark:
+class Cssg:
     def __init__(self, prog=None, library_dir=None):
         self.prog = prog
         if prog:
@@ -70,11 +70,11 @@ class CMark:
         else:
             sysname = platform.system()
             if sysname == 'Darwin':
-                libnames = [ "libcmark.dylib" ]
+                libnames = [ "libcssg.dylib" ]
             elif sysname == 'Windows':
-                libnames = [ "cmark.dll", "libcmark.dll" ]
+                libnames = [ "cssg.dll", "libcssg.dll" ]
             else:
-                libnames = [ "libcmark.so" ]
+                libnames = [ "libcssg.so" ]
             if not library_dir:
                 library_dir = os.path.join("build", "src")
             for libname in libnames:
@@ -82,7 +82,7 @@ class CMark:
                 if os.path.isfile(candidate):
                     libpath = candidate
                     break
-            cmark = CDLL(libpath)
-            self.to_html = lambda x: to_html(cmark, x)
-            self.to_commonmark = lambda x: to_commonmark(cmark, x)
+            cssg = CDLL(libpath)
+            self.to_html = lambda x: to_html(cssg, x)
+            self.to_commonmark = lambda x: to_commonmark(cssg, x)
 

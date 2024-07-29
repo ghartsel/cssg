@@ -10,9 +10,9 @@
 
   (provide (all-defined-out))
 
-  (define-ffi-definer defcmark (ffi-lib "libcmark"))
+  (define-ffi-definer defcssg (ffi-lib "libcssg"))
 
-  (define _cmark_node_type
+  (define _cssg_node_type
     (_enum '(;; Error status
              none
              ;; Block
@@ -27,11 +27,11 @@
              ;; ?? first-inline = text
              ;; ?? last-inline = image
              )))
-  (define _cmark_list_type
+  (define _cssg_list_type
     (_enum '(no_list bullet_list ordered_list)))
-  (define _cmark_delim_type
+  (define _cssg_delim_type
     (_enum '(no_delim period_delim paren_delim)))
-  (define _cmark_opts
+  (define _cssg_opts
     (let ([opts '([sourcepos  1] ; include sourcepos attribute on block elements
                   [hardbreaks 2] ; render `softbreak` elements as hard line breaks
                   [safe       3] ; defined here for API compatibility (on by default)
@@ -46,63 +46,63 @@
 
   (define-cpointer-type _node)
 
-  (defcmark cmark_markdown_to_html
-    (_fun [bs : _bytes] [_int = (bytes-length bs)] _cmark_opts
+  (defcssg cssg_markdown_to_html
+    (_fun [bs : _bytes] [_int = (bytes-length bs)] _cssg_opts
           -> [r : _bytes] -> (begin0 (bytes->string/utf-8 r) (free r))))
 
-  (defcmark cmark_parse_document
-    (_fun [bs : _bytes] [_int = (bytes-length bs)] _cmark_opts
+  (defcssg cssg_parse_document
+    (_fun [bs : _bytes] [_int = (bytes-length bs)] _cssg_opts
           -> _node))
 
-  (defcmark cmark_render_html
-    (_fun _node _cmark_opts
+  (defcssg cssg_render_html
+    (_fun _node _cssg_opts
           -> [r : _bytes] -> (begin0 (bytes->string/utf-8 r) (free r))))
 
-  (defcmark cmark_node_new              (_fun _cmark_node_type -> _node))
-  (defcmark cmark_node_free             (_fun _node -> _void))
+  (defcssg cssg_node_new              (_fun _cssg_node_type -> _node))
+  (defcssg cssg_node_free             (_fun _node -> _void))
 
-  (defcmark cmark_node_next             (_fun _node -> _node/null))
-  (defcmark cmark_node_previous         (_fun _node -> _node/null))
-  (defcmark cmark_node_parent           (_fun _node -> _node/null))
-  (defcmark cmark_node_first_child      (_fun _node -> _node/null))
-  (defcmark cmark_node_last_child       (_fun _node -> _node/null))
+  (defcssg cssg_node_next             (_fun _node -> _node/null))
+  (defcssg cssg_node_previous         (_fun _node -> _node/null))
+  (defcssg cssg_node_parent           (_fun _node -> _node/null))
+  (defcssg cssg_node_first_child      (_fun _node -> _node/null))
+  (defcssg cssg_node_last_child       (_fun _node -> _node/null))
 
-  (defcmark cmark_node_get_user_data    (_fun _node -> _racket))
-  (defcmark cmark_node_set_user_data    (_fun _node _racket -> _bool))
-  (defcmark cmark_node_get_type         (_fun _node -> _cmark_node_type))
-  (defcmark cmark_node_get_type_string  (_fun _node -> _bytes))
-  (defcmark cmark_node_get_literal      (_fun _node -> _string))
-  (defcmark cmark_node_set_literal      (_fun _node _string -> _bool))
-  (defcmark cmark_node_get_heading_level (_fun _node -> _int))
-  (defcmark cmark_node_set_heading_level (_fun _node _int -> _bool))
-  (defcmark cmark_node_get_list_type    (_fun _node -> _cmark_list_type))
-  (defcmark cmark_node_set_list_type    (_fun _node _cmark_list_type -> _bool))
-  (defcmark cmark_node_get_list_delim   (_fun _node -> _cmark_delim_type))
-  (defcmark cmark_node_set_list_delim   (_fun _node _cmark_delim_type -> _bool))
-  (defcmark cmark_node_get_list_start   (_fun _node -> _int))
-  (defcmark cmark_node_set_list_start   (_fun _node _int -> _bool))
-  (defcmark cmark_node_get_list_tight   (_fun _node -> _bool))
-  (defcmark cmark_node_set_list_tight   (_fun _node _bool -> _bool))
-  (defcmark cmark_node_get_fence_info   (_fun _node -> _string))
-  (defcmark cmark_node_set_fence_info   (_fun _node _string -> _bool))
-  (defcmark cmark_node_get_url          (_fun _node -> _string))
-  (defcmark cmark_node_set_url          (_fun _node _string -> _bool))
-  (defcmark cmark_node_get_title        (_fun _node -> _string))
-  (defcmark cmark_node_set_title        (_fun _node _string -> _bool))
-  (defcmark cmark_node_get_start_line   (_fun _node -> _int))
-  (defcmark cmark_node_get_start_column (_fun _node -> _int))
-  (defcmark cmark_node_get_end_line     (_fun _node -> _int))
-  (defcmark cmark_node_get_end_column   (_fun _node -> _int))
+  (defcssg cssg_node_get_user_data    (_fun _node -> _racket))
+  (defcssg cssg_node_set_user_data    (_fun _node _racket -> _bool))
+  (defcssg cssg_node_get_type         (_fun _node -> _cssg_node_type))
+  (defcssg cssg_node_get_type_string  (_fun _node -> _bytes))
+  (defcssg cssg_node_get_literal      (_fun _node -> _string))
+  (defcssg cssg_node_set_literal      (_fun _node _string -> _bool))
+  (defcssg cssg_node_get_heading_level (_fun _node -> _int))
+  (defcssg cssg_node_set_heading_level (_fun _node _int -> _bool))
+  (defcssg cssg_node_get_list_type    (_fun _node -> _cssg_list_type))
+  (defcssg cssg_node_set_list_type    (_fun _node _cssg_list_type -> _bool))
+  (defcssg cssg_node_get_list_delim   (_fun _node -> _cssg_delim_type))
+  (defcssg cssg_node_set_list_delim   (_fun _node _cssg_delim_type -> _bool))
+  (defcssg cssg_node_get_list_start   (_fun _node -> _int))
+  (defcssg cssg_node_set_list_start   (_fun _node _int -> _bool))
+  (defcssg cssg_node_get_list_tight   (_fun _node -> _bool))
+  (defcssg cssg_node_set_list_tight   (_fun _node _bool -> _bool))
+  (defcssg cssg_node_get_fence_info   (_fun _node -> _string))
+  (defcssg cssg_node_set_fence_info   (_fun _node _string -> _bool))
+  (defcssg cssg_node_get_url          (_fun _node -> _string))
+  (defcssg cssg_node_set_url          (_fun _node _string -> _bool))
+  (defcssg cssg_node_get_title        (_fun _node -> _string))
+  (defcssg cssg_node_set_title        (_fun _node _string -> _bool))
+  (defcssg cssg_node_get_start_line   (_fun _node -> _int))
+  (defcssg cssg_node_get_start_column (_fun _node -> _int))
+  (defcssg cssg_node_get_end_line     (_fun _node -> _int))
+  (defcssg cssg_node_get_end_column   (_fun _node -> _int))
 
-  (defcmark cmark_node_unlink           (_fun _node -> _void))
-  (defcmark cmark_node_insert_before    (_fun _node _node -> _bool))
-  (defcmark cmark_node_insert_after     (_fun _node _node -> _bool))
-  (defcmark cmark_node_prepend_child    (_fun _node _node -> _bool))
-  (defcmark cmark_node_append_child     (_fun _node _node -> _bool))
-  (defcmark cmark_consolidate_text_nodes (_fun _node -> _void))
+  (defcssg cssg_node_unlink           (_fun _node -> _void))
+  (defcssg cssg_node_insert_before    (_fun _node _node -> _bool))
+  (defcssg cssg_node_insert_after     (_fun _node _node -> _bool))
+  (defcssg cssg_node_prepend_child    (_fun _node _node -> _bool))
+  (defcssg cssg_node_append_child     (_fun _node _node -> _bool))
+  (defcssg cssg_consolidate_text_nodes (_fun _node -> _void))
 
-  (defcmark cmark_version               (_fun -> _int))
-  (defcmark cmark_version_string        (_fun -> _string))
+  (defcssg cssg_version               (_fun -> _int))
+  (defcssg cssg_version_string        (_fun -> _string))
 
   )
 
@@ -112,16 +112,16 @@
 
   (require (submod ".." low-level) ffi/unsafe)
 
-  (provide cmark-markdown-to-html)
-  (define (cmark-markdown-to-html str [options '(normalize smart)])
-    (cmark_markdown_to_html (if (bytes? str) str (string->bytes/utf-8 str))
+  (provide cssg-markdown-to-html)
+  (define (cssg-markdown-to-html str [options '(normalize smart)])
+    (cssg_markdown_to_html (if (bytes? str) str (string->bytes/utf-8 str))
                             options))
 
   (require (for-syntax racket/base racket/syntax))
   (define-syntax (make-getter+setter stx)
     (syntax-case stx ()
       [(_ name) (with-syntax ([(getter setter)
-                               (map (λ(op) (format-id #'name "cmark_node_~a_~a"
+                               (map (λ(op) (format-id #'name "cssg_node_~a_~a"
                                                       op #'name))
                                     '(get set))])
                   #'(cons getter setter))]))
@@ -132,20 +132,20 @@
     [link url title] [image url title]
     [list list_type list_delim list_start list_tight])
 
-  (provide cmark->sexpr)
-  (define (cmark->sexpr node)
-    (define text (cmark_node_get_literal node))
-    (define type (cmark_node_get_type node))
+  (provide cssg->sexpr)
+  (define (cssg->sexpr node)
+    (define text (cssg_node_get_literal node))
+    (define type (cssg_node_get_type node))
     (define children
-      (let loop ([node (cmark_node_first_child node)])
+      (let loop ([node (cssg_node_first_child node)])
         (if (not node) '()
-            (cons (cmark->sexpr node) (loop (cmark_node_next node))))))
+            (cons (cssg->sexpr node) (loop (cssg_node_next node))))))
     (define info
       (cond [(assq type getters+setters)
              => (λ(gss) (map (λ(gs) ((car gs) node)) (cdr gss)))]
             [else '()]))
     (define (assert-no what-not b)
-      (when b (error 'cmark->sexpr "unexpected ~a in ~s" what-not type)))
+      (when b (error 'cssg->sexpr "unexpected ~a in ~s" what-not type)))
     (cond [(memq type '(document paragraph heading block-quote list item
                         emph strong link image))
            (assert-no 'text text)
@@ -154,49 +154,49 @@
                         softbreak linebreak thematic-break))
            (assert-no 'children (pair? children))
            (list type info text)]
-          [else (error 'cmark->sexpr "unknown type: ~s" type)]))
+          [else (error 'cssg->sexpr "unknown type: ~s" type)]))
 
-  (provide sexpr->cmark)
-  (define (sexpr->cmark sexpr) ; assumes valid input, as generated by the above
+  (provide sexpr->cssg)
+  (define (sexpr->cssg sexpr) ; assumes valid input, as generated by the above
     (define (loop sexpr)
       (define type (car sexpr))
       (define info (cadr sexpr))
       (define data (caddr sexpr))
-      (define node (cmark_node_new type))
+      (define node (cssg_node_new type))
       (let ([gss (assq type getters+setters)])
         (when gss
           (unless (= (length (cdr gss)) (length info))
-            (error 'sexpr->cmark "bad number of info values in ~s" sexpr))
+            (error 'sexpr->cssg "bad number of info values in ~s" sexpr))
           (for-each (λ(gs x) ((cdr gs) node x)) (cdr gss) info)))
-      (cond [(string? data) (cmark_node_set_literal node data)]
+      (cond [(string? data) (cssg_node_set_literal node data)]
             [(not data) (void)]
             [(list? data)
              (for ([child (in-list data)])
-               (cmark_node_append_child node (sexpr->cmark child)))]
-            [else (error 'sexpr->cmark "bad data in ~s" sexpr)])
+               (cssg_node_append_child node (sexpr->cssg child)))]
+            [else (error 'sexpr->cssg "bad data in ~s" sexpr)])
       node)
     (define root (loop sexpr))
-    (register-finalizer root cmark_node_free)
+    (register-finalizer root cssg_node_free)
     root)
 
-  ;; Registers a `cmark_node_free` finalizer
-  (provide cmark-parse-document)
-  (define (cmark-parse-document str [options '(normalize smart)])
-    (define root (cmark_parse_document
+  ;; Registers a `cssg_node_free` finalizer
+  (provide cssg-parse-document)
+  (define (cssg-parse-document str [options '(normalize smart)])
+    (define root (cssg_parse_document
                   (if (bytes? str) str (string->bytes/utf-8 str))
                   options))
-    (register-finalizer root cmark_node_free)
+    (register-finalizer root cssg_node_free)
     root)
 
-  (provide cmark-render-html)
-  (define (cmark-render-html root [options '(normalize smart)])
-    (cmark_render_html root options)))
+  (provide cssg-render-html)
+  (define (cssg-render-html root [options '(normalize smart)])
+    (cssg_render_html root options)))
 
 #; ;; sample use
 (begin
   (require 'high-level racket/string)
-  (cmark-render-html
-   (cmark-parse-document
+  (cssg-render-html
+   (cssg-parse-document
     (string-join '("foo"
                    "==="
                    ""

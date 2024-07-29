@@ -1,19 +1,19 @@
-cmark
+cssg
 =====
 
 [![CI
-tests](https://github.com/commonmark/cmark/workflows/CI%20tests/badge.svg)](https://github.com/commonmark/cmark/actions)
+tests](https://github.com/commonmark/cssg/workflows/CI%20tests/badge.svg)](https://github.com/commonmark/cssg/actions)
 
-`cmark` is the C reference implementation of [CommonMark], a
+`cssg` is the C reference implementation of [CommonMark], a
 rationalized version of Markdown syntax with a [spec][the spec].
 (For the JavaScript reference implementation, see
 [commonmark.js].)
 
-It provides a shared library (`libcmark`) with functions for parsing
+It provides a shared library (`libcssg`) with functions for parsing
 CommonMark documents to an abstract syntax tree (AST), manipulating
 the AST, and rendering the document to HTML, groff man, LaTeX,
 CommonMark, or an XML representation of the AST.  It also provides a
-command-line program (`cmark`) for parsing and rendering CommonMark
+command-line program (`cssg`) for parsing and rendering CommonMark
 documents.
 
 Advantages of this library:
@@ -22,10 +22,10 @@ Advantages of this library:
   C99 and have no external dependencies.  They have been tested with
   MSVC, gcc, tcc, and clang.
 
-- **Fast.** cmark can render a Markdown version of *War and Peace* in
+- **Fast.** cssg can render a Markdown version of *War and Peace* in
   the blink of an eye (127 milliseconds on a ten year old laptop,
   vs. 100-400 milliseconds for an eye blink).  In our [benchmarks],
-  cmark is 10,000 times faster than the original `Markdown.pl`, and
+  cssg is 10,000 times faster than the original `Markdown.pl`, and
   on par with the very fastest available Markdown processors.
 
 - **Accurate.** The library passes all CommonMark conformance tests.
@@ -33,7 +33,7 @@ Advantages of this library:
 - **Standardized.** The library can be expected to parse CommonMark
   the same way as any other conforming parser.  So, for example,
   you can use `commonmark.js` on the client to preview content that
-  will be rendered on the server using `cmark`.
+  will be rendered on the server using `cssg`.
 
 - **Robust.** The library has been extensively fuzz-tested using
   [american fuzzy lop].  The test suite includes pathological cases
@@ -49,24 +49,24 @@ Advantages of this library:
 
 - **Free.** BSD2-licensed.
 
-It is easy to use `libcmark` in python, lua, ruby, and other dynamic
+It is easy to use `libcssg` in python, lua, ruby, and other dynamic
 languages: see the `wrappers/` subdirectory for some simple examples.
 
-There are also libraries that wrap `libcmark` for
+There are also libraries that wrap `libcssg` for
 [Go](https://github.com/rhinoman/go-commonmark),
-[Haskell](https://hackage.haskell.org/package/cmark),
+[Haskell](https://hackage.haskell.org/package/cssg),
 [Ruby](https://github.com/gjtorikian/commonmarker),
-[Lua](https://github.com/jgm/cmark-lua),
+[Lua](https://github.com/jgm/cssg-lua),
 [Perl](https://metacpan.org/release/CommonMark),
-[Python](https://pypi.python.org/pypi/paka.cmark),
+[Python](https://pypi.python.org/pypi/paka.cssg),
 [R](https://cran.r-project.org/package=commonmark),
-[Scala](https://github.com/sparsetech/cmark-scala) and
-[PHP](https://www.php.net/manual/en/book.cmark.php).
+[Scala](https://github.com/sparsetech/cssg-scala) and
+[PHP](https://www.php.net/manual/en/book.cssg.php).
 
 Installing
 ----------
 
-Building the C program (`cmark`) and shared library (`libcmark`)
+Building the C program (`cssg`) and shared library (`libcssg`)
 requires [cmake].  If you modify `scanners.re`, then you will also
 need [re2c] \(>= 0.14.2\), which is used to generate `scanners.c` from
 `scanners.re`.  We have included a pre-generated `scanners.c` in
@@ -87,7 +87,7 @@ on FreeBSD:
     mkdir build
     cd build
     cmake ..  # optionally: -DCMAKE_INSTALL_PREFIX=path
-    make      # executable will be created as build/src/cmark
+    make      # executable will be created as build/src/cssg
     make test
     make install
 
@@ -96,7 +96,7 @@ Or, to create Xcode project files on OSX:
     mkdir build
     cd build
     cmake -G Xcode ..
-    open cmark.xcodeproj
+    open cssg.xcodeproj
 
 The GNU Makefile also provides a few other targets for developers.
 To run a benchmark:
@@ -157,7 +157,7 @@ Security
 By default, the library will scrub raw HTML and potentially
 dangerous links (`javascript:`, `vbscript:`, `data:`, `file:`).
 
-To allow these, use the option `CMARK_OPT_UNSAFE` (or
+To allow these, use the option `CSSG_OPT_UNSAFE` (or
 `--unsafe`) with the command line program. If doing so, we
 recommend you use a HTML sanitizer specific to your needs to
 protect against [XSS

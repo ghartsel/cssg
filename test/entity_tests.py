@@ -7,7 +7,7 @@ import argparse
 import sys
 import platform
 import html
-from cmark import CMark
+from cssg import Cssg
 
 def get_entities():
     regex = r'^{\(unsigned char\*\)"([^"]+)", \{([^}]+)\}'
@@ -19,14 +19,14 @@ def get_entities():
         entities.append((entity, utf8))
     return entities
 
-parser = argparse.ArgumentParser(description='Run cmark tests.')
+parser = argparse.ArgumentParser(description='Run cssg tests.')
 parser.add_argument('--program', dest='program', nargs='?', default=None,
         help='program to test')
 parser.add_argument('--library-dir', dest='library_dir', nargs='?',
         default=None, help='directory containing dynamic library')
 args = parser.parse_args(sys.argv[1:])
 
-cmark = CMark(prog=args.program, library_dir=args.library_dir)
+cssg = Cssg(prog=args.program, library_dir=args.library_dir)
 
 entities = get_entities()
 
@@ -45,7 +45,7 @@ exceptions = {
 
 print("Testing entities:")
 for entity, utf8 in entities:
-    [rc, actual, err] = cmark.to_html("&{};".format(entity))
+    [rc, actual, err] = cssg.to_html("&{};".format(entity))
     check = exceptions.get(entity, utf8)
 
     if rc != 0:

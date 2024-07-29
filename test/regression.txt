@@ -4,14 +4,15 @@ Issue #113: EOL character weirdness on Windows
 (Important: first line ends with CR + CR + LF)
 
 ```````````````````````````````` example
-line1
+line1
+
 line2
 .
 <p>line1</p>
 <p>line2</p>
 ````````````````````````````````
 
-Issue #114: cmark skipping first character in line
+Issue #114: cssg skipping first character in line
 (Important: the blank lines around "Repeatedly" contain a tab.)
 
 ```````````````````````````````` example
@@ -276,7 +277,7 @@ Case fold test
 <p><a href="/url">link</a></p>
 ````````````````````````````````
 
-https://github.com/commonmark/cmark/issues/548
+https://github.com/commonmark/cssg/issues/548
 ```````````````````````````````` example
 (&#xFFFE;&#xFFFF;)
 .

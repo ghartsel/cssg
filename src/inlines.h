@@ -1,5 +1,5 @@
-#ifndef CMARK_INLINES_H
-#define CMARK_INLINES_H
+#ifndef CSSG_INLINES_H
+#define CSSG_INLINES_H
 
 #include "chunk.h"
 #include "references.h"
@@ -8,14 +8,14 @@
 extern "C" {
 #endif
 
-unsigned char *cmark_clean_url(cmark_mem *mem, cmark_chunk *url);
-unsigned char *cmark_clean_title(cmark_mem *mem, cmark_chunk *title);
+unsigned char *cssg_clean_url(cssg_mem *mem, cssg_chunk *url);
+unsigned char *cssg_clean_title(cssg_mem *mem, cssg_chunk *title);
 
-void cmark_parse_inlines(cmark_mem *mem, cmark_node *parent,
-                         cmark_reference_map *refmap, int options);
+void cssg_parse_inlines(cssg_mem *mem, cssg_node *parent,
+                         cssg_reference_map *refmap, int options);
 
-bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
-                                       cmark_reference_map *refmap);
+bufsize_t cssg_parse_reference_inline(cssg_mem *mem, cssg_chunk *input,
+                                       cssg_reference_map *refmap);
 
 #ifdef __cplusplus
 }

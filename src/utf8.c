@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-#include "cmark_ctype.h"
+#include "cssg_ctype.h"
 #include "utf8.h"
 
 static const int8_t utf8proc_utf8class[256] = {
@@ -18,9 +18,9 @@ static const int8_t utf8proc_utf8class[256] = {
     2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
     4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0};
 
-static void encode_unknown(cmark_strbuf *buf) {
+static void encode_unknown(cssg_strbuf *buf) {
   static const uint8_t repl[] = {239, 191, 189};
-  cmark_strbuf_put(buf, repl, 3);
+  cssg_strbuf_put(buf, repl, 3);
 }
 
 static int utf8proc_charlen(const uint8_t *str, bufsize_t str_len) {
@@ -107,7 +107,7 @@ static int utf8proc_valid(const uint8_t *str, bufsize_t str_len) {
   return length;
 }
 
-void cmark_utf8proc_check(cmark_strbuf *ob, const uint8_t *line,
+void cssg_utf8proc_check(cssg_strbuf *ob, const uint8_t *line,
                           bufsize_t size) {
   bufsize_t i = 0;
 
@@ -134,7 +134,7 @@ void cmark_utf8proc_check(cmark_strbuf *ob, const uint8_t *line,
     }
 
     if (i > org) {
-      cmark_strbuf_put(ob, line + org, i - org);
+      cssg_strbuf_put(ob, line + org, i - org);
     }
 
     if (i >= size) {
@@ -147,7 +147,7 @@ void cmark_utf8proc_check(cmark_strbuf *ob, const uint8_t *line,
   }
 }
 
-int cmark_utf8proc_iterate(const uint8_t *str, bufsize_t str_len,
+int cssg_utf8proc_iterate(const uint8_t *str, bufsize_t str_len,
                            int32_t *dst) {
   int length;
   int32_t uc = -1;
@@ -186,7 +186,7 @@ int cmark_utf8proc_iterate(const uint8_t *str, bufsize_t str_len,
   return length;
 }
 
-void cmark_utf8proc_encode_char(int32_t uc, cmark_strbuf *buf) {
+void cssg_utf8proc_encode_char(int32_t uc, cssg_strbuf *buf) {
   uint8_t dst[4];
   bufsize_t len = 0;
 
@@ -215,7 +215,7 @@ void cmark_utf8proc_encode_char(int32_t uc, cmark_strbuf *buf) {
     return;
   }
 
-  cmark_strbuf_put(buf, dst, len);
+  cssg_strbuf_put(buf, dst, len);
 }
 
 #include "case_fold.inc"
@@ -227,28 +227,28 @@ int cf_compare(const void *v1, const void *v2) {
   return (int32_t) CF_CODE_POINT(entry1) - (int32_t) CF_CODE_POINT(entry2);
 }
 
-void cmark_utf8proc_case_fold(cmark_strbuf *dest, const uint8_t *str,
+void cssg_utf8proc_case_fold(cssg_strbuf *dest, const uint8_t *str,
                               bufsize_t len) {
   int32_t c;
 
   while (len > 0) {
-    bufsize_t char_len = cmark_utf8proc_iterate(str, len, &c);
+    bufsize_t char_len = cssg_utf8proc_iterate(str, len, &c);
 
     if (char_len == 1) {
       if (c >= 'A' && c <= 'Z')
         c += 'a' - 'A';
-      cmark_strbuf_putc(dest, c);
+      cssg_strbuf_putc(dest, c);
     } else if (c >= CF_MAX) {
-        cmark_strbuf_put(dest, str, char_len);
+        cssg_strbuf_put(dest, str, char_len);
     } else if (char_len >= 0) {
       uint32_t key = c;
       uint32_t *entry = bsearch(&key, cf_table,
                                 CF_TABLE_SIZE, sizeof(uint32_t),
                                 cf_compare);
       if (entry == NULL) {
-        cmark_strbuf_put(dest, str, char_len);
+        cssg_strbuf_put(dest, str, char_len);
       } else {
-        cmark_strbuf_put(dest, cf_repl + CF_REPL_IDX(*entry),
+        cssg_strbuf_put(dest, cf_repl + CF_REPL_IDX(*entry),
                          CF_REPL_SIZE(*entry));
       }
     } else {
@@ -262,16 +262,16 @@ void cmark_utf8proc_case_fold(cmark_strbuf *dest, const uint8_t *str,
 }
 
 // matches anything in the Zs class, plus LF, CR, TAB, FF.
-int cmark_utf8proc_is_space(int32_t uc) {
+int cssg_utf8proc_is_space(int32_t uc) {
   return (uc == 9 || uc == 10 || uc == 12 || uc == 13 || uc == 32 ||
           uc == 160 || uc == 5760 || (uc >= 8192 && uc <= 8202) || uc == 8239 ||
           uc == 8287 || uc == 12288);
 }
 
 // matches anything in the P or S classes.
-int cmark_utf8proc_is_punctuation_or_symbol(int32_t uc) {
+int cssg_utf8proc_is_punctuation_or_symbol(int32_t uc) {
   if (uc < 128) {
-    return cmark_ispunct((char)uc);
+    return cssg_ispunct((char)uc);
   } else {
     return (
         uc > 128 &&

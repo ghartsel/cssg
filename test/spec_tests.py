@@ -7,10 +7,10 @@ import argparse
 import re
 import json
 import os
-from cmark import CMark
+from cssg import Cssg
 from normalize import normalize_html
 
-parser = argparse.ArgumentParser(description='Run cmark tests.')
+parser = argparse.ArgumentParser(description='Run cssg tests.')
 parser.add_argument('-p', '--program', dest='program', nargs='?', default=None,
         help='program to test')
 parser.add_argument('-s', '--spec', dest='spec', nargs='?', default='spec.txt',
@@ -150,7 +150,7 @@ if __name__ == "__main__":
         exit(0)
     else:
         skipped = len(all_tests) - len(tests)
-        converter = CMark(prog=args.program, library_dir=args.library_dir).to_html
+        converter = Cssg(prog=args.program, library_dir=args.library_dir).to_html
         result_counts = {'pass': 0, 'fail': 0, 'error': 0, 'skip': skipped}
         for test in tests:
             do_test(converter, test, args.normalize, result_counts)

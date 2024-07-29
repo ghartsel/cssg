@@ -1,3 +1,3 @@
-add_executable(cmark-fuzz cmark-fuzz.c)
-cmark_add_compile_options(cmark-fuzz)
-target_link_libraries(cmark-fuzz cmark)
+add_executable(cssg-fuzz cssg-fuzz.c)
+cssg_add_compile_options(cssg-fuzz)
+target_link_libraries(cssg-fuzz cssg)

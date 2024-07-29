@@ -29,39 +29,39 @@ IF (Python3_Interpreter_FOUND)
              COMMAND "$<TARGET_FILE:Python3::Interpreter>" "${CMAKE_CURRENT_SOURCE_DIR}/spec_tests.py"
                                                            --no-normalize
                                                            --spec "${CMAKE_CURRENT_SOURCE_DIR}/spec.txt"
-                                                           --library-dir "$<TARGET_FILE_DIR:cmark>")
+                                                           --library-dir "$<TARGET_FILE_DIR:cssg>")
 
     add_test(NAME pathological_tests_library
              COMMAND "$<TARGET_FILE:Python3::Interpreter>" "${CMAKE_CURRENT_SOURCE_DIR}/pathological_tests.py"
-                                                           --library-dir "$<TARGET_FILE_DIR:cmark>")
+                                                           --library-dir "$<TARGET_FILE_DIR:cssg>")
 
     add_test(NAME roundtriptest_library
              COMMAND "$<TARGET_FILE:Python3::Interpreter>" "${CMAKE_CURRENT_SOURCE_DIR}/roundtrip_tests.py"
                                                            --spec "${CMAKE_CURRENT_SOURCE_DIR}/spec.txt"
-                                                           --library-dir "$<TARGET_FILE_DIR:cmark>")
+                                                           --library-dir "$<TARGET_FILE_DIR:cssg>")
 
     add_test(NAME entity_library
              COMMAND "$<TARGET_FILE:Python3::Interpreter>" "${CMAKE_CURRENT_SOURCE_DIR}/entity_tests.py"
-                                                           --library-dir "$<TARGET_FILE_DIR:cmark>")
+                                                           --library-dir "$<TARGET_FILE_DIR:cssg>")
   endif()
 
   add_test(NAME spectest_executable
            COMMAND "$<TARGET_FILE:Python3::Interpreter>" "${CMAKE_CURRENT_SOURCE_DIR}/spec_tests.py"
                                                          --no-normalize
                                                          --spec "${CMAKE_CURRENT_SOURCE_DIR}/spec.txt"
-                                                         --program "$<TARGET_FILE:cmark_exe>")
+                                                         --program "$<TARGET_FILE:cssg_exe>")
 
   add_test(NAME smartpuncttest_executable
            COMMAND "$<TARGET_FILE:Python3::Interpreter>" "${CMAKE_CURRENT_SOURCE_DIR}/spec_tests.py"
                                                          --no-normalize
                                                          --spec "${CMAKE_CURRENT_SOURCE_DIR}/smart_punct.txt"
-                                                         --program "$<TARGET_FILE:cmark_exe> --smart")
+                                                         --program "$<TARGET_FILE:cssg_exe> --smart")
 
   add_test(NAME regressiontest_executable
            COMMAND "$<TARGET_FILE:Python3::Interpreter>" "${CMAKE_CURRENT_SOURCE_DIR}/spec_tests.py"
                                                          --no-normalize
                                                          --spec "${CMAKE_CURRENT_SOURCE_DIR}/regression.txt"
-                                                         --program "$<TARGET_FILE:cmark_exe>")
+                                                         --program "$<TARGET_FILE:cssg_exe>")
 
 ELSE(Python3_Interpreter_FOUND)
 

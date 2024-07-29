@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cmark.h"
+#include "cssg.h"
 #include "node.h"
 
 #if defined(__OpenBSD__)
@@ -29,7 +29,7 @@ typedef enum {
 } writer_format;
 
 void print_usage(void) {
-  printf("Usage:   cmark [FILE*]\n");
+  printf("Usage:   cssg [FILE*]\n");
   printf("Options:\n");
   printf("  --to, -t FORMAT  Specify output format (html, xml, man, "
          "commonmark, latex)\n");
@@ -45,25 +45,25 @@ void print_usage(void) {
   printf("  --version        Print version\n");
 }
 
-static void print_document(cmark_node *document, writer_format writer,
+static void print_document(cssg_node *document, writer_format writer,
                            int options, int width) {
   char *result;
 
   switch (writer) {
   case FORMAT_HTML:
-    result = cmark_render_html(document, options);
+    result = cssg_render_html(document, options);
     break;
   case FORMAT_XML:
-    result = cmark_render_xml(document, options);
+    result = cssg_render_xml(document, options);
     break;
   case FORMAT_MAN:
-    result = cmark_render_man(document, options, width);
+    result = cssg_render_man(document, options, width);
     break;
   case FORMAT_COMMONMARK:
-    result = cmark_render_commonmark(document, options, width);
+    result = cssg_render_commonmark(document, options, width);
     break;
   case FORMAT_LATEX:
-    result = cmark_render_latex(document, options, width);
+    result = cssg_render_latex(document, options, width);
     break;
   default:
     fprintf(stderr, "Unknown format %d\n", writer);
@@ -77,13 +77,13 @@ int main(int argc, char *argv[]) {
   int i, numfps = 0;
   int *files;
   char buffer[4096];
-  cmark_parser *parser;
+  cssg_parser *parser;
   size_t bytes;
-  cmark_node *document;
+  cssg_node *document;
   int width = 0;
   char *unparsed;
   writer_format writer = FORMAT_HTML;
-  int options = CMARK_OPT_DEFAULT;
+  int options = CSSG_OPT_DEFAULT;
 
 #ifdef USE_PLEDGE
   if (pledge("stdio rpath", NULL) != 0) {
@@ -101,23 +101,23 @@ int main(int argc, char *argv[]) {
 
   for (i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--version") == 0) {
-      printf("cmark %s", CMARK_VERSION_STRING);
+      printf("cssg %s", CSSG_VERSION_STRING);
       printf(" - CommonMark converter\n(C) 2014-2016 John MacFarlane\n");
       exit(0);
     } else if (strcmp(argv[i], "--sourcepos") == 0) {
-      options |= CMARK_OPT_SOURCEPOS;
+      options |= CSSG_OPT_SOURCEPOS;
     } else if (strcmp(argv[i], "--hardbreaks") == 0) {
-      options |= CMARK_OPT_HARDBREAKS;
+      options |= CSSG_OPT_HARDBREAKS;
     } else if (strcmp(argv[i], "--nobreaks") == 0) {
-      options |= CMARK_OPT_NOBREAKS;
+      options |= CSSG_OPT_NOBREAKS;
     } else if (strcmp(argv[i], "--smart") == 0) {
-      options |= CMARK_OPT_SMART;
+      options |= CSSG_OPT_SMART;
     } else if (strcmp(argv[i], "--safe") == 0) {
-      options |= CMARK_OPT_SAFE;
+      options |= CSSG_OPT_SAFE;
     } else if (strcmp(argv[i], "--unsafe") == 0) {
-      options |= CMARK_OPT_UNSAFE;
+      options |= CSSG_OPT_UNSAFE;
     } else if (strcmp(argv[i], "--validate-utf8") == 0) {
-      options |= CMARK_OPT_VALIDATE_UTF8;
+      options |= CSSG_OPT_VALIDATE_UTF8;
     } else if ((strcmp(argv[i], "--help") == 0) ||
                (strcmp(argv[i], "-h") == 0)) {
       print_usage();
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  parser = cmark_parser_new(options);
+  parser = cssg_parser_new(options);
   for (i = 0; i < numfps; i++) {
     FILE *fp = fopen(argv[files[i]], "rb");
     if (fp == NULL) {
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
     }
 
     while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
-      cmark_parser_feed(parser, buffer, bytes);
+      cssg_parser_feed(parser, buffer, bytes);
       if (bytes < sizeof(buffer)) {
         break;
       }
@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
   if (numfps == 0) {
 
     while ((bytes = fread(buffer, 1, sizeof(buffer), stdin)) > 0) {
-      cmark_parser_feed(parser, buffer, bytes);
+      cssg_parser_feed(parser, buffer, bytes);
       if (bytes < sizeof(buffer)) {
         break;
       }
@@ -200,12 +200,12 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-  document = cmark_parser_finish(parser);
-  cmark_parser_free(parser);
+  document = cssg_parser_finish(parser);
+  cssg_parser_free(parser);
 
   print_document(document, writer, options, width);
 
-  cmark_node_free(document);
+  cssg_node_free(document);
 
   free(files);
 

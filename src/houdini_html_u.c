@@ -24,8 +24,8 @@ static const unsigned char *S_lookup(int i, int low, int hi,
                                      const unsigned char *s, int len,
                                      bufsize_t *size_out) {
   int j;
-  uint32_t value = cmark_entities[i];
-  const unsigned char *ent_name = cmark_entity_text + ENT_TEXT_IDX(value);
+  uint32_t value = cssg_entities[i];
+  const unsigned char *ent_name = cssg_entity_text + ENT_TEXT_IDX(value);
   int ent_len = ENT_NAME_SIZE(value);
   int min_len = len < ent_len ? len : ent_len;
   int cmp =
@@ -55,7 +55,7 @@ static const unsigned char *S_lookup_entity(const unsigned char *s, int len,
   return S_lookup(ENT_TABLE_SIZE / 2, 0, ENT_TABLE_SIZE - 1, s, len, size_out);
 }
 
-bufsize_t houdini_unescape_ent(cmark_strbuf *ob, const uint8_t *src,
+bufsize_t houdini_unescape_ent(cssg_strbuf *ob, const uint8_t *src,
                                bufsize_t size) {
   bufsize_t i = 0;
 
@@ -100,7 +100,7 @@ bufsize_t houdini_unescape_ent(cmark_strbuf *ob, const uint8_t *src,
           codepoint >= 0x110000) {
         codepoint = 0xFFFD;
       }
-      cmark_utf8proc_encode_char(codepoint, ob);
+      cssg_utf8proc_encode_char(codepoint, ob);
       return i + 1;
     }
   }
@@ -118,7 +118,7 @@ bufsize_t houdini_unescape_ent(cmark_strbuf *ob, const uint8_t *src,
         const unsigned char *entity = S_lookup_entity(src, i, &size);
 
         if (entity != NULL) {
-          cmark_strbuf_put(ob, entity, size);
+          cssg_strbuf_put(ob, entity, size);
           return i + 1;
         }
 
@@ -130,7 +130,7 @@ bufsize_t houdini_unescape_ent(cmark_strbuf *ob, const uint8_t *src,
   return 0;
 }
 
-int houdini_unescape_html(cmark_strbuf *ob, const uint8_t *src,
+int houdini_unescape_html(cssg_strbuf *ob, const uint8_t *src,
                           bufsize_t size) {
   bufsize_t i = 0, org, ent;
 
@@ -144,10 +144,10 @@ int houdini_unescape_html(cmark_strbuf *ob, const uint8_t *src,
         if (i >= size)
           return 0;
 
-        cmark_strbuf_grow(ob, HOUDINI_UNESCAPED_SIZE(size));
+        cssg_strbuf_grow(ob, HOUDINI_UNESCAPED_SIZE(size));
       }
 
-      cmark_strbuf_put(ob, src + org, i - org);
+      cssg_strbuf_put(ob, src + org, i - org);
     }
 
     /* escaping */
@@ -161,14 +161,14 @@ int houdini_unescape_html(cmark_strbuf *ob, const uint8_t *src,
 
     /* not really an entity */
     if (ent == 0)
-      cmark_strbuf_putc(ob, '&');
+      cssg_strbuf_putc(ob, '&');
   }
 
   return 1;
 }
 
-void houdini_unescape_html_f(cmark_strbuf *ob, const uint8_t *src,
+void houdini_unescape_html_f(cssg_strbuf *ob, const uint8_t *src,
                              bufsize_t size) {
   if (!houdini_unescape_html(ob, src, size))
-    cmark_strbuf_put(ob, src, size);
+    cssg_strbuf_put(ob, src, size);
 }

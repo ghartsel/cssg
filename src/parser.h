@@ -1,5 +1,5 @@
-#ifndef CMARK_AST_H
-#define CMARK_AST_H
+#ifndef CSSG_AST_H
+#define CSSG_AST_H
 
 #include <stdio.h>
 #include "references.h"
@@ -12,11 +12,11 @@ extern "C" {
 
 #define MAX_LINK_LABEL_LENGTH 1000
 
-struct cmark_parser {
-  struct cmark_mem *mem;
-  struct cmark_reference_map *refmap;
-  struct cmark_node *root;
-  struct cmark_node *current;
+struct cssg_parser {
+  struct cssg_mem *mem;
+  struct cssg_reference_map *refmap;
+  struct cssg_node *root;
+  struct cssg_node *current;
   int line_number;
   bufsize_t offset;
   bufsize_t column;
@@ -26,10 +26,10 @@ struct cmark_parser {
   int indent;
   bool blank;
   bool partially_consumed_tab;
-  cmark_strbuf curline;
+  cssg_strbuf curline;
   bufsize_t last_line_length;
-  cmark_strbuf linebuf;
-  cmark_strbuf content;
+  cssg_strbuf linebuf;
+  cssg_strbuf content;
   int options;
   bool last_buffer_ended_with_cr;
   unsigned int total_size;

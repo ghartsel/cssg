@@ -31,5 +31,5 @@
 *.zip
 bstrlib.txt
 build
-cmark.dSYM/*
-cmark
+cssg.dSYM/*
+cssg

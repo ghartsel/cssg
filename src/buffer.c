@@ -7,34 +7,34 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cmark_ctype.h"
+#include "cssg_ctype.h"
 #include "buffer.h"
 
-/* Used as default value for cmark_strbuf->ptr so that people can always
- * assume ptr is non-NULL and zero terminated even for new cmark_strbufs.
+/* Used as default value for cssg_strbuf->ptr so that people can always
+ * assume ptr is non-NULL and zero terminated even for new cssg_strbufs.
  */
-unsigned char cmark_strbuf__initbuf[1];
+unsigned char cssg_strbuf__initbuf[1];
 
 #ifndef MIN
 #define MIN(x, y) ((x < y) ? x : y)
 #endif
 
-void cmark_strbuf_init(cmark_mem *mem, cmark_strbuf *buf,
+void cssg_strbuf_init(cssg_mem *mem, cssg_strbuf *buf,
                        bufsize_t initial_size) {
   buf->mem = mem;
   buf->asize = 0;
   buf->size = 0;
-  buf->ptr = cmark_strbuf__initbuf;
+  buf->ptr = cssg_strbuf__initbuf;
 
   if (initial_size > 0)
-    cmark_strbuf_grow(buf, initial_size);
+    cssg_strbuf_grow(buf, initial_size);
 }
 
-static inline void S_strbuf_grow_by(cmark_strbuf *buf, bufsize_t add) {
-  cmark_strbuf_grow(buf, buf->size + add);
+static inline void S_strbuf_grow_by(cssg_strbuf *buf, bufsize_t add) {
+  cssg_strbuf_grow(buf, buf->size + add);
 }
 
-void cmark_strbuf_grow(cmark_strbuf *buf, bufsize_t target_size) {
+void cssg_strbuf_grow(cssg_strbuf *buf, bufsize_t target_size) {
   assert(target_size > 0);
 
   if (target_size < buf->asize)
@@ -42,7 +42,7 @@ void cmark_strbuf_grow(cmark_strbuf *buf, bufsize_t target_size) {
 
   if (target_size > (bufsize_t)(INT32_MAX / 2)) {
     fprintf(stderr,
-      "[cmark] cmark_strbuf_grow requests buffer with size > %d, aborting\n",
+      "[cssg] cssg_strbuf_grow requests buffer with size > %d, aborting\n",
          (INT32_MAX / 2));
     abort();
   }
@@ -58,31 +58,31 @@ void cmark_strbuf_grow(cmark_strbuf *buf, bufsize_t target_size) {
   buf->asize = new_size;
 }
 
-void cmark_strbuf_free(cmark_strbuf *buf) {
+void cssg_strbuf_free(cssg_strbuf *buf) {
   if (!buf)
     return;
 
-  if (buf->ptr != cmark_strbuf__initbuf)
+  if (buf->ptr != cssg_strbuf__initbuf)
     buf->mem->free(buf->ptr);
 
-  cmark_strbuf_init(buf->mem, buf, 0);
+  cssg_strbuf_init(buf->mem, buf, 0);
 }
 
-void cmark_strbuf_clear(cmark_strbuf *buf) {
+void cssg_strbuf_clear(cssg_strbuf *buf) {
   buf->size = 0;
 
   if (buf->asize > 0)
     buf->ptr[0] = '\0';
 }
 
-void cmark_strbuf_set(cmark_strbuf *buf, const unsigned char *data,
+void cssg_strbuf_set(cssg_strbuf *buf, const unsigned char *data,
                       bufsize_t len) {
   if (len <= 0 || data == NULL) {
-    cmark_strbuf_clear(buf);
+    cssg_strbuf_clear(buf);
   } else {
     if (data != buf->ptr) {
       if (len >= buf->asize)
-        cmark_strbuf_grow(buf, len);
+        cssg_strbuf_grow(buf, len);
       memmove(buf->ptr, data, len);
     }
     buf->size = len;
@@ -90,13 +90,13 @@ void cmark_strbuf_set(cmark_strbuf *buf, const unsigned char *data,
   }
 }
 
-void cmark_strbuf_putc(cmark_strbuf *buf, int c) {
+void cssg_strbuf_putc(cssg_strbuf *buf, int c) {
   S_strbuf_grow_by(buf, 1);
   buf->ptr[buf->size++] = (unsigned char)(c & 0xFF);
   buf->ptr[buf->size] = '\0';
 }
 
-void cmark_strbuf_put(cmark_strbuf *buf, const unsigned char *data,
+void cssg_strbuf_put(cssg_strbuf *buf, const unsigned char *data,
                       bufsize_t len) {
   if (len <= 0)
     return;
@@ -107,11 +107,11 @@ void cmark_strbuf_put(cmark_strbuf *buf, const unsigned char *data,
   buf->ptr[buf->size] = '\0';
 }
 
-void cmark_strbuf_puts(cmark_strbuf *buf, const char *string) {
-  cmark_strbuf_put(buf, (const unsigned char *)string, (bufsize_t)strlen(string));
+void cssg_strbuf_puts(cssg_strbuf *buf, const char *string) {
+  cssg_strbuf_put(buf, (const unsigned char *)string, (bufsize_t)strlen(string));
 }
 
-unsigned char *cmark_strbuf_detach(cmark_strbuf *buf) {
+unsigned char *cssg_strbuf_detach(cssg_strbuf *buf) {
   unsigned char *data = buf->ptr;
 
   if (buf->asize == 0) {
@@ -119,11 +119,11 @@ unsigned char *cmark_strbuf_detach(cmark_strbuf *buf) {
     return (unsigned char *)buf->mem->calloc(1, 1);
   }
 
-  cmark_strbuf_init(buf->mem, buf, 0);
+  cssg_strbuf_init(buf->mem, buf, 0);
   return data;
 }
 
-void cmark_strbuf_truncate(cmark_strbuf *buf, bufsize_t len) {
+void cssg_strbuf_truncate(cssg_strbuf *buf, bufsize_t len) {
   if (len < 0)
     len = 0;
 
@@ -133,7 +133,7 @@ void cmark_strbuf_truncate(cmark_strbuf *buf, bufsize_t len) {
   }
 }
 
-void cmark_strbuf_drop(cmark_strbuf *buf, bufsize_t n) {
+void cssg_strbuf_drop(cssg_strbuf *buf, bufsize_t n) {
   if (n > 0) {
     if (n > buf->size)
       n = buf->size;
@@ -145,12 +145,12 @@ void cmark_strbuf_drop(cmark_strbuf *buf, bufsize_t n) {
   }
 }
 
-void cmark_strbuf_rtrim(cmark_strbuf *buf) {
+void cssg_strbuf_rtrim(cssg_strbuf *buf) {
   if (!buf->size)
     return;
 
   while (buf->size > 0) {
-    if (!cmark_isspace(buf->ptr[buf->size - 1]))
+    if (!cssg_isspace(buf->ptr[buf->size - 1]))
       break;
 
     buf->size--;
@@ -159,28 +159,28 @@ void cmark_strbuf_rtrim(cmark_strbuf *buf) {
   buf->ptr[buf->size] = '\0';
 }
 
-void cmark_strbuf_trim(cmark_strbuf *buf) {
+void cssg_strbuf_trim(cssg_strbuf *buf) {
   bufsize_t i = 0;
 
   if (!buf->size)
     return;
 
-  while (i < buf->size && cmark_isspace(buf->ptr[i]))
+  while (i < buf->size && cssg_isspace(buf->ptr[i]))
     i++;
 
-  cmark_strbuf_drop(buf, i);
+  cssg_strbuf_drop(buf, i);
 
-  cmark_strbuf_rtrim(buf);
+  cssg_strbuf_rtrim(buf);
 }
 
 // Destructively modify string, collapsing consecutive
 // space and newline characters into a single space.
-void cmark_strbuf_normalize_whitespace(cmark_strbuf *s) {
+void cssg_strbuf_normalize_whitespace(cssg_strbuf *s) {
   bool last_char_was_space = false;
   bufsize_t r, w;
 
   for (r = 0, w = 0; r < s->size; ++r) {
-    if (cmark_isspace(s->ptr[r])) {
+    if (cssg_isspace(s->ptr[r])) {
       if (!last_char_was_space) {
         s->ptr[w++] = ' ';
         last_char_was_space = true;
@@ -191,19 +191,19 @@ void cmark_strbuf_normalize_whitespace(cmark_strbuf *s) {
     }
   }
 
-  cmark_strbuf_truncate(s, w);
+  cssg_strbuf_truncate(s, w);
 }
 
 // Destructively unescape a string: remove backslashes before punctuation chars.
-void cmark_strbuf_unescape(cmark_strbuf *buf) {
+void cssg_strbuf_unescape(cssg_strbuf *buf) {
   bufsize_t r, w;
 
   for (r = 0, w = 0; r < buf->size; ++r) {
-    if (buf->ptr[r] == '\\' && cmark_ispunct(buf->ptr[r + 1]))
+    if (buf->ptr[r] == '\\' && cssg_ispunct(buf->ptr[r + 1]))
       r++;
 
     buf->ptr[w++] = buf->ptr[r];
   }
 
-  cmark_strbuf_truncate(buf, w);
+  cssg_strbuf_truncate(buf, w);
 }

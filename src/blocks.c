@@ -11,9 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cmark_ctype.h"
+#include "cssg_ctype.h"
 #include "parser.h"
-#include "cmark.h"
+#include "cssg.h"
 #include "node.h"
 #include "references.h"
 #include "utf8.h"
@@ -32,27 +32,27 @@
 
 #define peek_at(i, n) (i)->data[n]
 
-static bool S_last_line_blank(const cmark_node *node) {
-  return (node->flags & CMARK_NODE__LAST_LINE_BLANK) != 0;
+static bool S_last_line_blank(const cssg_node *node) {
+  return (node->flags & CSSG_NODE__LAST_LINE_BLANK) != 0;
 }
 
-static bool S_last_line_checked(const cmark_node *node) {
-  return (node->flags & CMARK_NODE__LAST_LINE_CHECKED) != 0;
+static bool S_last_line_checked(const cssg_node *node) {
+  return (node->flags & CSSG_NODE__LAST_LINE_CHECKED) != 0;
 }
 
-static inline cmark_node_type S_type(const cmark_node *node) {
-  return (cmark_node_type)node->type;
+static inline cssg_node_type S_type(const cssg_node *node) {
+  return (cssg_node_type)node->type;
 }
 
-static void S_set_last_line_blank(cmark_node *node, bool is_blank) {
+static void S_set_last_line_blank(cssg_node *node, bool is_blank) {
   if (is_blank)
-    node->flags |= CMARK_NODE__LAST_LINE_BLANK;
+    node->flags |= CSSG_NODE__LAST_LINE_BLANK;
   else
-    node->flags &= ~CMARK_NODE__LAST_LINE_BLANK;
+    node->flags &= ~CSSG_NODE__LAST_LINE_BLANK;
 }
 
-static void S_set_last_line_checked(cmark_node *node) {
-  node->flags |= CMARK_NODE__LAST_LINE_CHECKED;
+static void S_set_last_line_checked(cssg_node *node) {
+  node->flags |= CSSG_NODE__LAST_LINE_CHECKED;
 }
 
 static inline bool S_is_line_end_char(char c) {
@@ -63,20 +63,20 @@ static inline bool S_is_space_or_tab(char c) {
   return (c == ' ' || c == '\t');
 }
 
-static void S_parser_feed(cmark_parser *parser, const unsigned char *buffer,
+static void S_parser_feed(cssg_parser *parser, const unsigned char *buffer,
                           size_t len, bool eof);
 
-static void S_process_line(cmark_parser *parser, const unsigned char *buffer,
+static void S_process_line(cssg_parser *parser, const unsigned char *buffer,
                            bufsize_t bytes);
 
-static cmark_node *make_block(cmark_mem *mem, cmark_node_type tag,
+static cssg_node *make_block(cssg_mem *mem, cssg_node_type tag,
                               int start_line, int start_column) {
-  cmark_node *e;
+  cssg_node *e;
 
-  e = (cmark_node *)mem->calloc(1, sizeof(*e));
+  e = (cssg_node *)mem->calloc(1, sizeof(*e));
   e->mem = mem;
   e->type = (uint16_t)tag;
-  e->flags = CMARK_NODE__OPEN;
+  e->flags = CSSG_NODE__OPEN;
   e->start_line = start_line;
   e->start_column = start_column;
   e->end_line = start_line;
@@ -85,22 +85,22 @@ static cmark_node *make_block(cmark_mem *mem, cmark_node_type tag,
 }
 
 // Create a root document node.
-static cmark_node *make_document(cmark_mem *mem) {
-  cmark_node *e = make_block(mem, CMARK_NODE_DOCUMENT, 1, 1);
+static cssg_node *make_document(cssg_mem *mem) {
+  cssg_node *e = make_block(mem, CSSG_NODE_DOCUMENT, 1, 1);
   return e;
 }
 
-cmark_parser *cmark_parser_new_with_mem_into_root(int options, cmark_mem *mem, cmark_node *root) {
-  cmark_parser *parser = (cmark_parser *)mem->calloc(1, sizeof(cmark_parser));
+cssg_parser *cssg_parser_new_with_mem_into_root(int options, cssg_mem *mem, cssg_node *root) {
+  cssg_parser *parser = (cssg_parser *)mem->calloc(1, sizeof(cssg_parser));
   parser->mem = mem;
 
-  cmark_strbuf_init(mem, &parser->curline, 256);
-  cmark_strbuf_init(mem, &parser->linebuf, 0);
-  cmark_strbuf_init(mem, &parser->content, 0);
+  cssg_strbuf_init(mem, &parser->curline, 256);
+  cssg_strbuf_init(mem, &parser->linebuf, 0);
+  cssg_strbuf_init(mem, &parser->content, 0);
 
-  root->flags = CMARK_NODE__OPEN;
+  root->flags = CSSG_NODE__OPEN;
 
-  parser->refmap = cmark_reference_map_new(mem);
+  parser->refmap = cssg_reference_map_new(mem);
   parser->root = root;
   parser->current = root;
   parser->line_number = 0;
@@ -119,28 +119,28 @@ cmark_parser *cmark_parser_new_with_mem_into_root(int options, cmark_mem *mem, c
   return parser;
 }
 
-cmark_parser *cmark_parser_new_with_mem(int options, cmark_mem *mem) {
-  cmark_node *document = make_document(mem);
-  return cmark_parser_new_with_mem_into_root(options, mem, document);
+cssg_parser *cssg_parser_new_with_mem(int options, cssg_mem *mem) {
+  cssg_node *document = make_document(mem);
+  return cssg_parser_new_with_mem_into_root(options, mem, document);
 }
 
-cmark_parser *cmark_parser_new(int options) {
-  extern cmark_mem DEFAULT_MEM_ALLOCATOR;
-  return cmark_parser_new_with_mem(options, &DEFAULT_MEM_ALLOCATOR);
+cssg_parser *cssg_parser_new(int options) {
+  extern cssg_mem DEFAULT_MEM_ALLOCATOR;
+  return cssg_parser_new_with_mem(options, &DEFAULT_MEM_ALLOCATOR);
 }
 
-void cmark_parser_free(cmark_parser *parser) {
-  cmark_mem *mem = parser->mem;
-  cmark_strbuf_free(&parser->curline);
-  cmark_strbuf_free(&parser->linebuf);
-  cmark_reference_map_free(parser->refmap);
+void cssg_parser_free(cssg_parser *parser) {
+  cssg_mem *mem = parser->mem;
+  cssg_strbuf_free(&parser->curline);
+  cssg_strbuf_free(&parser->linebuf);
+  cssg_reference_map_free(parser->refmap);
   mem->free(parser);
 }
 
-static cmark_node *finalize(cmark_parser *parser, cmark_node *b);
+static cssg_node *finalize(cssg_parser *parser, cssg_node *b);
 
 // Returns true if line has only space characters, else false.
-static bool is_blank(cmark_strbuf *s, bufsize_t offset) {
+static bool is_blank(cssg_strbuf *s, bufsize_t offset) {
   while (offset < s->size) {
     switch (s->ptr[offset]) {
     case '\r':
@@ -160,26 +160,26 @@ static bool is_blank(cmark_strbuf *s, bufsize_t offset) {
   return true;
 }
 
-static inline bool can_contain(cmark_node_type parent_type,
-                               cmark_node_type child_type) {
-  return (parent_type == CMARK_NODE_DOCUMENT ||
-          parent_type == CMARK_NODE_BLOCK_QUOTE ||
-          parent_type == CMARK_NODE_ITEM ||
-          (parent_type == CMARK_NODE_LIST && child_type == CMARK_NODE_ITEM));
+static inline bool can_contain(cssg_node_type parent_type,
+                               cssg_node_type child_type) {
+  return (parent_type == CSSG_NODE_DOCUMENT ||
+          parent_type == CSSG_NODE_BLOCK_QUOTE ||
+          parent_type == CSSG_NODE_ITEM ||
+          (parent_type == CSSG_NODE_LIST && child_type == CSSG_NODE_ITEM));
 }
 
-static inline bool accepts_lines(cmark_node_type block_type) {
-  return (block_type == CMARK_NODE_PARAGRAPH ||
-          block_type == CMARK_NODE_HEADING ||
-          block_type == CMARK_NODE_CODE_BLOCK);
+static inline bool accepts_lines(cssg_node_type block_type) {
+  return (block_type == CSSG_NODE_PARAGRAPH ||
+          block_type == CSSG_NODE_HEADING ||
+          block_type == CSSG_NODE_CODE_BLOCK);
 }
 
-static inline bool contains_inlines(cmark_node_type block_type) {
-  return (block_type == CMARK_NODE_PARAGRAPH ||
-          block_type == CMARK_NODE_HEADING);
+static inline bool contains_inlines(cssg_node_type block_type) {
+  return (block_type == CSSG_NODE_PARAGRAPH ||
+          block_type == CSSG_NODE_HEADING);
 }
 
-static void add_line(cmark_chunk *ch, cmark_parser *parser) {
+static void add_line(cssg_chunk *ch, cssg_parser *parser) {
   int chars_to_tab;
   int i;
   if (parser->partially_consumed_tab) {
@@ -187,14 +187,14 @@ static void add_line(cmark_chunk *ch, cmark_parser *parser) {
     // add space characters:
     chars_to_tab = TAB_STOP - (parser->column % TAB_STOP);
     for (i = 0; i < chars_to_tab; i++) {
-      cmark_strbuf_putc(&parser->content, ' ');
+      cssg_strbuf_putc(&parser->content, ' ');
     }
   }
-  cmark_strbuf_put(&parser->content, ch->data + parser->offset,
+  cssg_strbuf_put(&parser->content, ch->data + parser->offset,
                    ch->len - parser->offset);
 }
 
-static void remove_trailing_blank_lines(cmark_strbuf *ln) {
+static void remove_trailing_blank_lines(cssg_strbuf *ln) {
   bufsize_t i;
   unsigned char c;
 
@@ -206,7 +206,7 @@ static void remove_trailing_blank_lines(cmark_strbuf *ln) {
   }
 
   if (i < 0) {
-    cmark_strbuf_clear(ln);
+    cssg_strbuf_clear(ln);
     return;
   }
 
@@ -216,18 +216,18 @@ static void remove_trailing_blank_lines(cmark_strbuf *ln) {
     if (!S_is_line_end_char(c))
       continue;
 
-    cmark_strbuf_truncate(ln, i);
+    cssg_strbuf_truncate(ln, i);
     break;
   }
 }
 
 // Check to see if a node ends with a blank line, descending
 // if needed into lists and sublists.
-static bool S_ends_with_blank_line(cmark_node *node) {
+static bool S_ends_with_blank_line(cssg_node *node) {
   if (S_last_line_checked(node)) {
     return(S_last_line_blank(node));
-  } else if ((S_type(node) == CMARK_NODE_LIST ||
-              S_type(node) == CMARK_NODE_ITEM) && node->last_child) {
+  } else if ((S_type(node) == CSSG_NODE_LIST ||
+              S_type(node) == CSSG_NODE_ITEM) && node->last_child) {
     S_set_last_line_checked(node);
     return(S_ends_with_blank_line(node->last_child));
   } else {
@@ -237,40 +237,40 @@ static bool S_ends_with_blank_line(cmark_node *node) {
 }
 
 // returns true if content remains after link defs are resolved.
-static bool resolve_reference_link_definitions(cmark_parser *parser) {
+static bool resolve_reference_link_definitions(cssg_parser *parser) {
   bufsize_t pos;
-  cmark_strbuf *node_content = &parser->content;
-  cmark_chunk chunk = {node_content->ptr, node_content->size};
+  cssg_strbuf *node_content = &parser->content;
+  cssg_chunk chunk = {node_content->ptr, node_content->size};
   while (chunk.len && chunk.data[0] == '[' &&
-         (pos = cmark_parse_reference_inline(parser->mem, &chunk,
+         (pos = cssg_parse_reference_inline(parser->mem, &chunk,
                                              parser->refmap))) {
 
     chunk.data += pos;
     chunk.len -= pos;
   }
-  cmark_strbuf_drop(node_content, (node_content->size - chunk.len));
+  cssg_strbuf_drop(node_content, (node_content->size - chunk.len));
   return !is_blank(node_content, 0);
 }
 
-static cmark_node *finalize(cmark_parser *parser, cmark_node *b) {
+static cssg_node *finalize(cssg_parser *parser, cssg_node *b) {
   bufsize_t pos;
-  cmark_node *item;
-  cmark_node *subitem;
-  cmark_node *parent;
+  cssg_node *item;
+  cssg_node *subitem;
+  cssg_node *parent;
   bool has_content;
 
   parent = b->parent;
   assert(b->flags &
-         CMARK_NODE__OPEN); // shouldn't call finalize on closed blocks
-  b->flags &= ~CMARK_NODE__OPEN;
+         CSSG_NODE__OPEN); // shouldn't call finalize on closed blocks
+  b->flags &= ~CSSG_NODE__OPEN;
 
   if (parser->curline.size == 0) {
     // end of input - line number has not been incremented
     b->end_line = parser->line_number;
     b->end_column = parser->last_line_length;
-  } else if (S_type(b) == CMARK_NODE_DOCUMENT ||
-             (S_type(b) == CMARK_NODE_CODE_BLOCK && b->as.code.fenced) ||
-             (S_type(b) == CMARK_NODE_HEADING && b->as.heading.setext)) {
+  } else if (S_type(b) == CSSG_NODE_DOCUMENT ||
+             (S_type(b) == CSSG_NODE_CODE_BLOCK && b->as.code.fenced) ||
+             (S_type(b) == CSSG_NODE_HEADING && b->as.heading.setext)) {
     b->end_line = parser->line_number;
     b->end_column = parser->curline.size;
     if (b->end_column && parser->curline.ptr[b->end_column - 1] == '\n')
@@ -282,26 +282,26 @@ static cmark_node *finalize(cmark_parser *parser, cmark_node *b) {
     b->end_column = parser->last_line_length;
   }
 
-  cmark_strbuf *node_content = &parser->content;
+  cssg_strbuf *node_content = &parser->content;
 
   switch (S_type(b)) {
-  case CMARK_NODE_PARAGRAPH:
+  case CSSG_NODE_PARAGRAPH:
   {
     has_content = resolve_reference_link_definitions(parser);
     if (!has_content) {
       // remove blank node (former reference def)
-      cmark_node_free(b);
+      cssg_node_free(b);
     } else {
       b->len = node_content->size;
-      b->data = cmark_strbuf_detach(node_content);
+      b->data = cssg_strbuf_detach(node_content);
     }
     break;
   }
 
-  case CMARK_NODE_CODE_BLOCK:
+  case CSSG_NODE_CODE_BLOCK:
     if (!b->as.code.fenced) { // indented code
       remove_trailing_blank_lines(node_content);
-      cmark_strbuf_putc(node_content, '\n');
+      cssg_strbuf_putc(node_content, '\n');
     } else {
       // first line of contents becomes info
       for (pos = 0; pos < node_content->size; ++pos) {
@@ -313,30 +313,30 @@ static cmark_node *finalize(cmark_parser *parser, cmark_node *b) {
       if (pos == 0) {
         b->as.code.info = NULL;
       } else {
-        cmark_strbuf tmp = CMARK_BUF_INIT(parser->mem);
+        cssg_strbuf tmp = CSSG_BUF_INIT(parser->mem);
         houdini_unescape_html_f(&tmp, node_content->ptr, pos);
-        cmark_strbuf_trim(&tmp);
-        cmark_strbuf_unescape(&tmp);
-        b->as.code.info = cmark_strbuf_detach(&tmp);
+        cssg_strbuf_trim(&tmp);
+        cssg_strbuf_unescape(&tmp);
+        b->as.code.info = cssg_strbuf_detach(&tmp);
       }
 
       if (node_content->ptr[pos] == '\r')
         pos += 1;
       if (node_content->ptr[pos] == '\n')
         pos += 1;
-      cmark_strbuf_drop(node_content, pos);
+      cssg_strbuf_drop(node_content, pos);
     }
     b->len = node_content->size;
-    b->data = cmark_strbuf_detach(node_content);
+    b->data = cssg_strbuf_detach(node_content);
     break;
 
-  case CMARK_NODE_HEADING:
-  case CMARK_NODE_HTML_BLOCK:
+  case CSSG_NODE_HEADING:
+  case CSSG_NODE_HTML_BLOCK:
     b->len = node_content->size;
-    b->data = cmark_strbuf_detach(node_content);
+    b->data = cssg_strbuf_detach(node_content);
     break;
 
-  case CMARK_NODE_LIST:      // determine tight/loose status
+  case CSSG_NODE_LIST:      // determine tight/loose status
     b->as.list.tight = true; // tight by default
     item = b->first_child;
 
@@ -373,8 +373,8 @@ static cmark_node *finalize(cmark_parser *parser, cmark_node *b) {
 }
 
 // Add a node as child of another.  Return pointer to child.
-static cmark_node *add_child(cmark_parser *parser, cmark_node *parent,
-                             cmark_node_type block_type, int start_column) {
+static cssg_node *add_child(cssg_parser *parser, cssg_node *parent,
+                             cssg_node_type block_type, int start_column) {
   assert(parent);
 
   // if 'parent' isn't the kind of node that can accept this child,
@@ -383,7 +383,7 @@ static cmark_node *add_child(cmark_parser *parser, cmark_node *parent,
     parent = finalize(parser, parent);
   }
 
-  cmark_node *child =
+  cssg_node *child =
       make_block(parser->mem, block_type, parser->line_number, start_column);
   child->parent = parent;
 
@@ -400,17 +400,17 @@ static cmark_node *add_child(cmark_parser *parser, cmark_node *parent,
 
 // Walk through node and all children, recursively, parsing
 // string content into inline content where appropriate.
-static void process_inlines(cmark_mem *mem, cmark_node *root,
-                            cmark_reference_map *refmap, int options) {
-  cmark_iter *iter = cmark_iter_new(root);
-  cmark_node *cur;
-  cmark_event_type ev_type;
+static void process_inlines(cssg_mem *mem, cssg_node *root,
+                            cssg_reference_map *refmap, int options) {
+  cssg_iter *iter = cssg_iter_new(root);
+  cssg_node *cur;
+  cssg_event_type ev_type;
 
-  while ((ev_type = cmark_iter_next(iter)) != CMARK_EVENT_DONE) {
-    cur = cmark_iter_get_node(iter);
-    if (ev_type == CMARK_EVENT_ENTER) {
+  while ((ev_type = cssg_iter_next(iter)) != CSSG_EVENT_DONE) {
+    cur = cssg_iter_get_node(iter);
+    if (ev_type == CSSG_EVENT_ENTER) {
       if (contains_inlines(S_type(cur))) {
-        cmark_parse_inlines(mem, cur, refmap, options);
+        cssg_parse_inlines(mem, cur, refmap, options);
         mem->free(cur->data);
         cur->data = NULL;
         cur->len = 0;
@@ -418,18 +418,18 @@ static void process_inlines(cmark_mem *mem, cmark_node *root,
     }
   }
 
-  cmark_iter_free(iter);
+  cssg_iter_free(iter);
 }
 
 // Attempts to parse a list item marker (bullet or enumerated).
 // On success, returns length of the marker, and populates
 // data with the details.  On failure, returns 0.
-static bufsize_t parse_list_marker(cmark_mem *mem, cmark_chunk *input,
+static bufsize_t parse_list_marker(cssg_mem *mem, cssg_chunk *input,
                                    bufsize_t pos, bool interrupts_paragraph,
-                                   cmark_list **dataptr) {
+                                   cssg_list **dataptr) {
   unsigned char c;
   bufsize_t startpos;
-  cmark_list *data;
+  cssg_list *data;
   bufsize_t i;
 
   startpos = pos;
@@ -437,7 +437,7 @@ static bufsize_t parse_list_marker(cmark_mem *mem, cmark_chunk *input,
 
   if (c == '*' || c == '-' || c == '+') {
     pos++;
-    if (!cmark_isspace(peek_at(input, pos))) {
+    if (!cssg_isspace(peek_at(input, pos))) {
       return 0;
     }
 
@@ -452,14 +452,14 @@ static bufsize_t parse_list_marker(cmark_mem *mem, cmark_chunk *input,
       }
     }
 
-    data = (cmark_list *)mem->calloc(1, sizeof(*data));
+    data = (cssg_list *)mem->calloc(1, sizeof(*data));
     data->marker_offset = 0; // will be adjusted later
-    data->list_type = CMARK_BULLET_LIST;
+    data->list_type = CSSG_BULLET_LIST;
     data->bullet_char = c;
     data->start = 0;
-    data->delimiter = CMARK_NO_DELIM;
+    data->delimiter = CSSG_NO_DELIM;
     data->tight = false;
-  } else if (cmark_isdigit(c)) {
+  } else if (cssg_isdigit(c)) {
     int start = 0;
     int digits = 0;
 
@@ -470,7 +470,7 @@ static bufsize_t parse_list_marker(cmark_mem *mem, cmark_chunk *input,
       // We limit to 9 digits to avoid overflow,
       // assuming max int is 2^31 - 1
       // This also seems to be the limit for 'start' in some browsers.
-    } while (digits < 9 && cmark_isdigit(peek_at(input, pos)));
+    } while (digits < 9 && cssg_isdigit(peek_at(input, pos)));
 
     if (interrupts_paragraph && start != 1) {
       return 0;
@@ -478,7 +478,7 @@ static bufsize_t parse_list_marker(cmark_mem *mem, cmark_chunk *input,
     c = peek_at(input, pos);
     if (c == '.' || c == ')') {
       pos++;
-      if (!cmark_isspace(peek_at(input, pos))) {
+      if (!cssg_isspace(peek_at(input, pos))) {
         return 0;
       }
       if (interrupts_paragraph) {
@@ -492,12 +492,12 @@ static bufsize_t parse_list_marker(cmark_mem *mem, cmark_chunk *input,
         }
       }
 
-      data = (cmark_list *)mem->calloc(1, sizeof(*data));
+      data = (cssg_list *)mem->calloc(1, sizeof(*data));
       data->marker_offset = 0; // will be adjusted later
-      data->list_type = CMARK_ORDERED_LIST;
+      data->list_type = CSSG_ORDERED_LIST;
       data->bullet_char = 0;
       data->start = start;
-      data->delimiter = (c == '.' ? CMARK_PERIOD_DELIM : CMARK_PAREN_DELIM);
+      data->delimiter = (c == '.' ? CSSG_PERIOD_DELIM : CSSG_PAREN_DELIM);
       data->tight = false;
     } else {
       return 0;
@@ -511,14 +511,14 @@ static bufsize_t parse_list_marker(cmark_mem *mem, cmark_chunk *input,
 }
 
 // Return 1 if list item belongs in list, else 0.
-static int lists_match(cmark_list *list_data, cmark_list *item_data) {
+static int lists_match(cssg_list *list_data, cssg_list *item_data) {
   return (list_data->list_type == item_data->list_type &&
           list_data->delimiter == item_data->delimiter &&
           // list_data->marker_offset == item_data.marker_offset &&
           list_data->bullet_char == item_data->bullet_char);
 }
 
-static cmark_node *finalize_document(cmark_parser *parser) {
+static cssg_node *finalize_document(cssg_parser *parser) {
   while (parser->current != parser->root) {
     parser->current = finalize(parser, parser->current);
   }
@@ -534,16 +534,16 @@ static cmark_node *finalize_document(cmark_parser *parser) {
 
   process_inlines(parser->mem, parser->root, parser->refmap, parser->options);
 
-  cmark_strbuf_free(&parser->content);
+  cssg_strbuf_free(&parser->content);
 
   return parser->root;
 }
 
-cmark_node *cmark_parse_file(FILE *f, int options) {
+cssg_node *cssg_parse_file(FILE *f, int options) {
   unsigned char buffer[4096];
-  cmark_parser *parser = cmark_parser_new(options);
+  cssg_parser *parser = cssg_parser_new(options);
   size_t bytes;
-  cmark_node *document;
+  cssg_node *document;
 
   while ((bytes = fread(buffer, 1, sizeof(buffer), f)) > 0) {
     bool eof = bytes < sizeof(buffer);
@@ -553,27 +553,27 @@ cmark_node *cmark_parse_file(FILE *f, int options) {
     }
   }
 
-  document = cmark_parser_finish(parser);
-  cmark_parser_free(parser);
+  document = cssg_parser_finish(parser);
+  cssg_parser_free(parser);
   return document;
 }
 
-cmark_node *cmark_parse_document(const char *buffer, size_t len, int options) {
-  cmark_parser *parser = cmark_parser_new(options);
-  cmark_node *document;
+cssg_node *cssg_parse_document(const char *buffer, size_t len, int options) {
+  cssg_parser *parser = cssg_parser_new(options);
+  cssg_node *document;
 
   S_parser_feed(parser, (const unsigned char *)buffer, len, true);
 
-  document = cmark_parser_finish(parser);
-  cmark_parser_free(parser);
+  document = cssg_parser_finish(parser);
+  cssg_parser_free(parser);
   return document;
 }
 
-void cmark_parser_feed(cmark_parser *parser, const char *buffer, size_t len) {
+void cssg_parser_feed(cssg_parser *parser, const char *buffer, size_t len) {
   S_parser_feed(parser, (const unsigned char *)buffer, len, false);
 }
 
-static void S_parser_feed(cmark_parser *parser, const unsigned char *buffer,
+static void S_parser_feed(cssg_parser *parser, const unsigned char *buffer,
                           size_t len, bool eof) {
   const unsigned char *end = buffer + len;
   static const uint8_t repl[] = {239, 191, 189};
@@ -614,20 +614,20 @@ static void S_parser_feed(cmark_parser *parser, const unsigned char *buffer,
     chunk_len = (eol - buffer);
     if (process) {
       if (parser->linebuf.size > 0) {
-        cmark_strbuf_put(&parser->linebuf, buffer, chunk_len);
+        cssg_strbuf_put(&parser->linebuf, buffer, chunk_len);
         S_process_line(parser, parser->linebuf.ptr, parser->linebuf.size);
-        cmark_strbuf_clear(&parser->linebuf);
+        cssg_strbuf_clear(&parser->linebuf);
       } else {
         S_process_line(parser, buffer, chunk_len);
       }
     } else {
       if (eol < end && *eol == '\0') {
         // omit NULL byte
-        cmark_strbuf_put(&parser->linebuf, buffer, chunk_len);
+        cssg_strbuf_put(&parser->linebuf, buffer, chunk_len);
         // add replacement character
-        cmark_strbuf_put(&parser->linebuf, repl, 3);
+        cssg_strbuf_put(&parser->linebuf, repl, 3);
       } else {
-        cmark_strbuf_put(&parser->linebuf, buffer, chunk_len);
+        cssg_strbuf_put(&parser->linebuf, buffer, chunk_len);
       }
     }
 
@@ -650,10 +650,10 @@ static void S_parser_feed(cmark_parser *parser, const unsigned char *buffer,
   }
 }
 
-static void chop_trailing_hashtags(cmark_chunk *ch) {
+static void chop_trailing_hashtags(cssg_chunk *ch) {
   bufsize_t n, orig_n;
 
-  cmark_chunk_rtrim(ch);
+  cssg_chunk_rtrim(ch);
   orig_n = n = ch->len - 1;
 
   // if string ends in space followed by #s, remove these:
@@ -663,7 +663,7 @@ static void chop_trailing_hashtags(cmark_chunk *ch) {
   // Check for a space before the final #s:
   if (n != orig_n && n >= 0 && S_is_space_or_tab(peek_at(ch, n))) {
     ch->len = n;
-    cmark_chunk_rtrim(ch);
+    cssg_chunk_rtrim(ch);
   }
 }
 
@@ -673,7 +673,7 @@ static void chop_trailing_hashtags(cmark_chunk *ch) {
 // "...three or more hyphens, asterisks,
 // or underscores on a line by themselves. If you wish, you may use
 // spaces between the hyphens or asterisks."
-static int S_scan_thematic_break(cmark_parser *parser, cmark_chunk *input,
+static int S_scan_thematic_break(cssg_parser *parser, cssg_chunk *input,
                                  bufsize_t offset) {
   bufsize_t i;
   char c;
@@ -704,7 +704,7 @@ static int S_scan_thematic_break(cmark_parser *parser, cmark_chunk *input,
 // Find first nonspace character from current offset, setting
 // parser->first_nonspace, parser->first_nonspace_column,
 // parser->indent, and parser->blank. Does not advance parser->offset.
-static void S_find_first_nonspace(cmark_parser *parser, cmark_chunk *input) {
+static void S_find_first_nonspace(cssg_parser *parser, cssg_chunk *input) {
   char c;
   int chars_to_tab = TAB_STOP - (parser->column % TAB_STOP);
 
@@ -742,7 +742,7 @@ static void S_find_first_nonspace(cmark_parser *parser, cmark_chunk *input) {
 // indicates a number of columns; otherwise, a number of bytes.
 // If advancing a certain number of columns partially consumes
 // a tab character, parser->partially_consumed_tab is set to true.
-static void S_advance_offset(cmark_parser *parser, cmark_chunk *input,
+static void S_advance_offset(cssg_parser *parser, cssg_chunk *input,
                              bufsize_t count, bool columns) {
   char c;
   int chars_to_tab;
@@ -771,12 +771,12 @@ static void S_advance_offset(cmark_parser *parser, cmark_chunk *input,
   }
 }
 
-static bool S_last_child_is_open(cmark_node *container) {
+static bool S_last_child_is_open(cssg_node *container) {
   return container->last_child &&
-         (container->last_child->flags & CMARK_NODE__OPEN);
+         (container->last_child->flags & CSSG_NODE__OPEN);
 }
 
-static bool parse_block_quote_prefix(cmark_parser *parser, cmark_chunk *input) {
+static bool parse_block_quote_prefix(cssg_parser *parser, cssg_chunk *input) {
   bool res = false;
   bufsize_t matched = 0;
 
@@ -795,8 +795,8 @@ static bool parse_block_quote_prefix(cmark_parser *parser, cmark_chunk *input) {
   return res;
 }
 
-static bool parse_node_item_prefix(cmark_parser *parser, cmark_chunk *input,
-                                   cmark_node *container) {
+static bool parse_node_item_prefix(cssg_parser *parser, cssg_chunk *input,
+                                   cssg_node *container) {
   bool res = false;
 
   if (parser->indent >=
@@ -816,8 +816,8 @@ static bool parse_node_item_prefix(cmark_parser *parser, cmark_chunk *input,
   return res;
 }
 
-static bool parse_code_block_prefix(cmark_parser *parser, cmark_chunk *input,
-                                    cmark_node *container,
+static bool parse_code_block_prefix(cssg_parser *parser, cssg_chunk *input,
+                                    cssg_node *container,
                                     bool *should_continue) {
   bool res = false;
 
@@ -859,8 +859,8 @@ static bool parse_code_block_prefix(cmark_parser *parser, cmark_chunk *input,
   return res;
 }
 
-static bool parse_html_block_prefix(cmark_parser *parser,
-                                    cmark_node *container) {
+static bool parse_html_block_prefix(cssg_parser *parser,
+                                    cssg_node *container) {
   bool res = false;
   int html_block_type = container->as.html_block_type;
 
@@ -891,12 +891,12 @@ static bool parse_html_block_prefix(cmark_parser *parser,
  *
  * Returns: The last matching node, or NULL
  */
-static cmark_node *check_open_blocks(cmark_parser *parser, cmark_chunk *input,
+static cssg_node *check_open_blocks(cssg_parser *parser, cssg_chunk *input,
                                      bool *all_matched) {
   bool should_continue = true;
   *all_matched = false;
-  cmark_node *container = parser->root;
-  cmark_node_type cont_type;
+  cssg_node *container = parser->root;
+  cssg_node_type cont_type;
 
   while (S_last_child_is_open(container)) {
     container = container->last_child;
@@ -905,15 +905,15 @@ static cmark_node *check_open_blocks(cmark_parser *parser, cmark_chunk *input,
     S_find_first_nonspace(parser, input);
 
     switch (cont_type) {
-    case CMARK_NODE_BLOCK_QUOTE:
+    case CSSG_NODE_BLOCK_QUOTE:
       if (!parse_block_quote_prefix(parser, input))
         goto done;
       break;
-    case CMARK_NODE_LIST:
+    case CSSG_NODE_LIST:
       // Avoid quadratic behavior caused by iterating deeply nested lists
       // for each blank line.
       if (parser->blank) {
-        if (container->flags & CMARK_NODE__LIST_LAST_LINE_BLANK &&
+        if (container->flags & CSSG_NODE__LIST_LAST_LINE_BLANK &&
             parser->indent == 0) {
           // Abort early if we encounter multiple blank lines. Returning
           // NULL will cause S_process_line to skip the calls to
@@ -923,33 +923,33 @@ static cmark_node *check_open_blocks(cmark_parser *parser, cmark_chunk *input,
           // line, all open nodes have already been closed when the
           // first blank line was processed. Certain block types accept
           // empty lines as content, so add them here.
-          if (parser->current->type == CMARK_NODE_CODE_BLOCK ||
-              parser->current->type == CMARK_NODE_HTML_BLOCK) {
+          if (parser->current->type == CSSG_NODE_CODE_BLOCK ||
+              parser->current->type == CSSG_NODE_HTML_BLOCK) {
             add_line(input, parser);
           }
           return NULL;
         }
-        container->flags |= CMARK_NODE__LIST_LAST_LINE_BLANK;
+        container->flags |= CSSG_NODE__LIST_LAST_LINE_BLANK;
       } else {
-        container->flags &= ~CMARK_NODE__LIST_LAST_LINE_BLANK;
+        container->flags &= ~CSSG_NODE__LIST_LAST_LINE_BLANK;
       }
       break;
-    case CMARK_NODE_ITEM:
+    case CSSG_NODE_ITEM:
       if (!parse_node_item_prefix(parser, input, container))
         goto done;
       break;
-    case CMARK_NODE_CODE_BLOCK:
+    case CSSG_NODE_CODE_BLOCK:
       if (!parse_code_block_prefix(parser, input, container, &should_continue))
         goto done;
       break;
-    case CMARK_NODE_HEADING:
+    case CSSG_NODE_HEADING:
       // a heading can never contain more than one line
       goto done;
-    case CMARK_NODE_HTML_BLOCK:
+    case CSSG_NODE_HTML_BLOCK:
       if (!parse_html_block_prefix(parser, container))
         goto done;
       break;
-    case CMARK_NODE_PARAGRAPH:
+    case CSSG_NODE_PARAGRAPH:
       if (parser->blank)
         goto done;
       break;
@@ -972,12 +972,12 @@ done:
   return container;
 }
 
-static void open_new_blocks(cmark_parser *parser, cmark_node **container,
-                            cmark_chunk *input, bool all_matched) {
+static void open_new_blocks(cssg_parser *parser, cssg_node **container,
+                            cssg_chunk *input, bool all_matched) {
   bool indented;
-  cmark_list *data = NULL;
-  bool maybe_lazy = S_type(parser->current) == CMARK_NODE_PARAGRAPH;
-  cmark_node_type cont_type = S_type(*container);
+  cssg_list *data = NULL;
+  bool maybe_lazy = S_type(parser->current) == CSSG_NODE_PARAGRAPH;
+  cssg_node_type cont_type = S_type(*container);
   bufsize_t matched = 0;
   int lev = 0;
   bool save_partially_consumed_tab;
@@ -985,8 +985,8 @@ static void open_new_blocks(cmark_parser *parser, cmark_node **container,
   int save_offset;
   int save_column;
 
-  while (cont_type != CMARK_NODE_CODE_BLOCK &&
-         cont_type != CMARK_NODE_HTML_BLOCK) {
+  while (cont_type != CSSG_NODE_CODE_BLOCK &&
+         cont_type != CSSG_NODE_HTML_BLOCK) {
 
     S_find_first_nonspace(parser, input);
     indented = parser->indent >= CODE_INDENT;
@@ -1001,7 +1001,7 @@ static void open_new_blocks(cmark_parser *parser, cmark_node **container,
       if (S_is_space_or_tab(peek_at(input, parser->offset))) {
         S_advance_offset(parser, input, 1, true);
       }
-      *container = add_child(parser, *container, CMARK_NODE_BLOCK_QUOTE,
+      *container = add_child(parser, *container, CSSG_NODE_BLOCK_QUOTE,
                              blockquote_startpos + 1);
 
     } else if (!indented && (matched = scan_atx_heading_start(
@@ -1013,10 +1013,10 @@ static void open_new_blocks(cmark_parser *parser, cmark_node **container,
       S_advance_offset(parser, input,
                        parser->first_nonspace + matched - parser->offset,
                        false);
-      *container = add_child(parser, *container, CMARK_NODE_HEADING,
+      *container = add_child(parser, *container, CSSG_NODE_HEADING,
                              heading_startpos + 1);
 
-      hashpos = cmark_chunk_strchr(input, '#', parser->first_nonspace);
+      hashpos = cssg_chunk_strchr(input, '#', parser->first_nonspace);
 
       while (peek_at(input, hashpos) == '#') {
         level++;
@@ -1029,7 +1029,7 @@ static void open_new_blocks(cmark_parser *parser, cmark_node **container,
 
     } else if (!indented && (matched = scan_open_code_fence(
                                  input, parser->first_nonspace))) {
-      *container = add_child(parser, *container, CMARK_NODE_CODE_BLOCK,
+      *container = add_child(parser, *container, CSSG_NODE_CODE_BLOCK,
                              parser->first_nonspace + 1);
       (*container)->as.code.fenced = true;
       (*container)->as.code.fence_char = peek_at(input, parser->first_nonspace);
@@ -1043,16 +1043,16 @@ static void open_new_blocks(cmark_parser *parser, cmark_node **container,
 
     } else if (!indented && ((matched = scan_html_block_start(
                                   input, parser->first_nonspace)) ||
-                             (cont_type != CMARK_NODE_PARAGRAPH &&
+                             (cont_type != CSSG_NODE_PARAGRAPH &&
                               !maybe_lazy &&
                               (matched = scan_html_block_start_7(
                                    input, parser->first_nonspace))))) {
-      *container = add_child(parser, *container, CMARK_NODE_HTML_BLOCK,
+      *container = add_child(parser, *container, CSSG_NODE_HTML_BLOCK,
                              parser->first_nonspace + 1);
       (*container)->as.html_block_type = matched;
       // note, we don't adjust parser->offset because the tag is part of the
       // text
-    } else if (!indented && cont_type == CMARK_NODE_PARAGRAPH &&
+    } else if (!indented && cont_type == CSSG_NODE_PARAGRAPH &&
                (lev =
                     scan_setext_heading_line(input, parser->first_nonspace))) {
       // finalize paragraph, resolving reference links
@@ -1060,24 +1060,24 @@ static void open_new_blocks(cmark_parser *parser, cmark_node **container,
 
       if (has_content) {
 
-        (*container)->type = (uint16_t)CMARK_NODE_HEADING;
+        (*container)->type = (uint16_t)CSSG_NODE_HEADING;
         (*container)->as.heading.level = lev;
         (*container)->as.heading.setext = true;
         S_advance_offset(parser, input, input->len - 1 - parser->offset, false);
       }
     } else if (!indented &&
-               !(cont_type == CMARK_NODE_PARAGRAPH && !all_matched) &&
+               !(cont_type == CSSG_NODE_PARAGRAPH && !all_matched) &&
                (parser->thematic_break_kill_pos <= parser->first_nonspace) &&
                S_scan_thematic_break(parser, input, parser->first_nonspace)) {
       // it's only now that we know the line is not part of a setext heading:
-      *container = add_child(parser, *container, CMARK_NODE_THEMATIC_BREAK,
+      *container = add_child(parser, *container, CSSG_NODE_THEMATIC_BREAK,
                              parser->first_nonspace + 1);
       S_advance_offset(parser, input, input->len - 1 - parser->offset, false);
-    } else if ((!indented || cont_type == CMARK_NODE_LIST) &&
+    } else if ((!indented || cont_type == CSSG_NODE_LIST) &&
                parser->indent < 4 &&
                (matched = parse_list_marker(
                     parser->mem, input, parser->first_nonspace,
-                    (*container)->type == CMARK_NODE_PARAGRAPH, &data))) {
+                    (*container)->type == CSSG_NODE_PARAGRAPH, &data))) {
 
       // Note that we can have new list items starting with >= 4
       // spaces indent, as long as the list container is still open.
@@ -1117,23 +1117,23 @@ static void open_new_blocks(cmark_parser *parser, cmark_node **container,
 
       data->marker_offset = parser->indent;
 
-      if (cont_type != CMARK_NODE_LIST ||
+      if (cont_type != CSSG_NODE_LIST ||
           !lists_match(&((*container)->as.list), data)) {
-        *container = add_child(parser, *container, CMARK_NODE_LIST,
+        *container = add_child(parser, *container, CSSG_NODE_LIST,
                                parser->first_nonspace + 1);
 
         memcpy(&((*container)->as.list), data, sizeof(*data));
       }
 
       // add the list item
-      *container = add_child(parser, *container, CMARK_NODE_ITEM,
+      *container = add_child(parser, *container, CSSG_NODE_ITEM,
                              parser->first_nonspace + 1);
       /* TODO: static */
       memcpy(&((*container)->as.list), data, sizeof(*data));
       parser->mem->free(data);
     } else if (indented && !maybe_lazy && !parser->blank) {
       S_advance_offset(parser, input, CODE_INDENT, true);
-      *container = add_child(parser, *container, CMARK_NODE_CODE_BLOCK,
+      *container = add_child(parser, *container, CSSG_NODE_CODE_BLOCK,
                              parser->offset + 1);
       (*container)->as.code.fenced = false;
       (*container)->as.code.fence_char = 0;
@@ -1155,10 +1155,10 @@ static void open_new_blocks(cmark_parser *parser, cmark_node **container,
   }
 }
 
-static void add_text_to_container(cmark_parser *parser, cmark_node *container,
-                                  cmark_node *last_matched_container,
-                                  cmark_chunk *input) {
-  cmark_node *tmp;
+static void add_text_to_container(cssg_parser *parser, cssg_node *container,
+                                  cssg_node *last_matched_container,
+                                  cssg_chunk *input) {
+  cssg_node *tmp;
   // what remains at parser->offset is a text line.  add the text to the
   // appropriate container.
 
@@ -1171,12 +1171,12 @@ static void add_text_to_container(cmark_parser *parser, cmark_node *container,
   // and we don't count blanks in fenced code for purposes of tight/loose
   // lists or breaking out of lists.  we also don't set last_line_blank
   // on an empty list item.
-  const cmark_node_type ctype = S_type(container);
+  const cssg_node_type ctype = S_type(container);
   const bool last_line_blank =
-      (parser->blank && ctype != CMARK_NODE_BLOCK_QUOTE &&
-       ctype != CMARK_NODE_HEADING && ctype != CMARK_NODE_THEMATIC_BREAK &&
-       !(ctype == CMARK_NODE_CODE_BLOCK && container->as.code.fenced) &&
-       !(ctype == CMARK_NODE_ITEM && container->first_child == NULL &&
+      (parser->blank && ctype != CSSG_NODE_BLOCK_QUOTE &&
+       ctype != CSSG_NODE_HEADING && ctype != CSSG_NODE_THEMATIC_BREAK &&
+       !(ctype == CSSG_NODE_CODE_BLOCK && container->as.code.fenced) &&
+       !(ctype == CSSG_NODE_ITEM && container->first_child == NULL &&
          container->start_line == parser->line_number));
 
   S_set_last_line_blank(container, last_line_blank);
@@ -1195,7 +1195,7 @@ static void add_text_to_container(cmark_parser *parser, cmark_node *container,
   // the open paragraph.
   if (parser->current != last_matched_container &&
       container == last_matched_container && !parser->blank &&
-      S_type(parser->current) == CMARK_NODE_PARAGRAPH) {
+      S_type(parser->current) == CSSG_NODE_PARAGRAPH) {
     add_line(input, parser);
   } else { // not a lazy continuation
     // Finalize any blocks that were not matched and set cur to container:
@@ -1204,9 +1204,9 @@ static void add_text_to_container(cmark_parser *parser, cmark_node *container,
       assert(parser->current != NULL);
     }
 
-    if (S_type(container) == CMARK_NODE_CODE_BLOCK) {
+    if (S_type(container) == CSSG_NODE_CODE_BLOCK) {
       add_line(input, parser);
-    } else if (S_type(container) == CMARK_NODE_HTML_BLOCK) {
+    } else if (S_type(container) == CSSG_NODE_HTML_BLOCK) {
       add_line(input, parser);
 
       int matches_end_condition;
@@ -1248,7 +1248,7 @@ static void add_text_to_container(cmark_parser *parser, cmark_node *container,
     } else if (parser->blank) {
       // ??? do nothing
     } else if (accepts_lines(S_type(container))) {
-      if (S_type(container) == CMARK_NODE_HEADING &&
+      if (S_type(container) == CSSG_NODE_HEADING &&
           container->as.heading.setext == false) {
         chop_trailing_hashtags(input);
       }
@@ -1257,7 +1257,7 @@ static void add_text_to_container(cmark_parser *parser, cmark_node *container,
       add_line(input, parser);
     } else {
       // create paragraph container for line
-      container = add_child(parser, container, CMARK_NODE_PARAGRAPH,
+      container = add_child(parser, container, CSSG_NODE_PARAGRAPH,
                             parser->first_nonspace + 1);
       S_advance_offset(parser, input, parser->first_nonspace - parser->offset,
                        false);
@@ -1269,23 +1269,23 @@ static void add_text_to_container(cmark_parser *parser, cmark_node *container,
 }
 
 /* See http://spec.commonmark.org/0.24/#phase-1-block-structure */
-static void S_process_line(cmark_parser *parser, const unsigned char *buffer,
+static void S_process_line(cssg_parser *parser, const unsigned char *buffer,
                            bufsize_t bytes) {
-  cmark_node *last_matched_container;
+  cssg_node *last_matched_container;
   bool all_matched = true;
-  cmark_node *container;
-  cmark_chunk input;
+  cssg_node *container;
+  cssg_chunk input;
 
-  if (parser->options & CMARK_OPT_VALIDATE_UTF8)
-    cmark_utf8proc_check(&parser->curline, buffer, bytes);
+  if (parser->options & CSSG_OPT_VALIDATE_UTF8)
+    cssg_utf8proc_check(&parser->curline, buffer, bytes);
   else
-    cmark_strbuf_put(&parser->curline, buffer, bytes);
+    cssg_strbuf_put(&parser->curline, buffer, bytes);
 
   bytes = parser->curline.size;
 
   // ensure line ends with a newline:
   if (bytes == 0 || !S_is_line_end_char(parser->curline.ptr[bytes - 1]))
-    cmark_strbuf_putc(&parser->curline, '\n');
+    cssg_strbuf_putc(&parser->curline, '\n');
 
   parser->offset = 0;
   parser->column = 0;
@@ -1321,23 +1321,23 @@ finished:
       input.data[parser->last_line_length - 1] == '\r')
     parser->last_line_length -= 1;
 
-  cmark_strbuf_clear(&parser->curline);
+  cssg_strbuf_clear(&parser->curline);
 }
 
-cmark_node *cmark_parser_finish(cmark_parser *parser) {
+cssg_node *cssg_parser_finish(cssg_parser *parser) {
   if (parser->linebuf.size) {
     S_process_line(parser, parser->linebuf.ptr, parser->linebuf.size);
-    cmark_strbuf_clear(&parser->linebuf);
+    cssg_strbuf_clear(&parser->linebuf);
   }
 
   finalize_document(parser);
 
-  cmark_consolidate_text_nodes(parser->root);
+  cssg_consolidate_text_nodes(parser->root);
 
-  cmark_strbuf_free(&parser->curline);
+  cssg_strbuf_free(&parser->curline);
 
-#if CMARK_DEBUG_NODES
-  if (cmark_node_check(parser->root, stderr)) {
+#if CSSG_DEBUG_NODES
+  if (cssg_node_check(parser->root, stderr)) {
     abort();
   }
 #endif

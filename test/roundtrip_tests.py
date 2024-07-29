@@ -1,10 +1,10 @@
 import re
 import sys
 from spec_tests import get_tests, do_test
-from cmark import CMark
+from cssg import Cssg
 import argparse
 
-parser = argparse.ArgumentParser(description='Run cmark roundtrip tests.')
+parser = argparse.ArgumentParser(description='Run cssg roundtrip tests.')
 parser.add_argument('-p', '--program', dest='program', nargs='?', default=None,
         help='program to test')
 parser.add_argument('-s', '--spec', dest='spec', nargs='?', default='spec.txt',
@@ -23,10 +23,10 @@ args = parser.parse_args(sys.argv[1:])
 spec = sys.argv[1]
 
 def converter(md):
-  cmark = CMark(prog=args.program, library_dir=args.library_dir)
-  [ec, result, err] = cmark.to_commonmark(md)
+  cssg = Cssg(prog=args.program, library_dir=args.library_dir)
+  [ec, result, err] = cssg.to_commonmark(md)
   if ec == 0:
-    [ec, html, err] = cmark.to_html(result)
+    [ec, html, err] = cssg.to_html(result)
     if ec == 0:
         # In the commonmark writer we insert dummy HTML
         # comments between lists, and between lists and code

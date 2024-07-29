@@ -3,8 +3,8 @@ exec_prefix=@CMAKE_INSTALL_PREFIX@
 libdir=@CMAKE_INSTALL_FULL_LIBDIR@
 includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
 
-Name: libcmark
+Name: libcssg
 Description: CommonMark parsing, rendering, and manipulation
 Version: @PROJECT_VERSION@
-Libs: -L${libdir} -lcmark
+Libs: -L${libdir} -lcssg
 Cflags: -I${includedir}

@@ -7,7 +7,7 @@ if(POLICY CMP0092)
   cmake_policy(SET CMP0092 NEW)
 endif()
 
-project(cmark
+project(cssg
   LANGUAGES C CXX
   VERSION 0.31.0)
 
@@ -35,27 +35,27 @@ endif()
 
 # Backwards Compatibility
 # TODO: remove this once there has been a period to enable people to migrate
-set(_CMARK_BUILD_SHARED_LIBS_DEFAULT NO)
-if(DEFINED CMARK_SHARED)
+set(_CSSG_BUILD_SHARED_LIBS_DEFAULT NO)
+if(DEFINED CSSG_SHARED)
   message(AUTHOR_WARNING [=[
-'CMARK_SHARED' has been replaced with the standard 'BUILD_SHARED_LIBS' to control the library type.
+'CSSG_SHARED' has been replaced with the standard 'BUILD_SHARED_LIBS' to control the library type.
 ]=])
-  set(_CMARK_BUILD_SHARED_LIBS_DEFAULT ${CMARK_SHARED})
+  set(_CSSG_BUILD_SHARED_LIBS_DEFAULT ${CSSG_SHARED})
 endif()
-if(DEFINED CMARK_STATIC)
+if(DEFINED CSSG_STATIC)
   message(AUTHOR_WARNING [=[
-'CMARK_STATIC' has been replaced with the standard 'BUILD_SHARED_LIBS' to control the library type.
+'CSSG_STATIC' has been replaced with the standard 'BUILD_SHARED_LIBS' to control the library type.
 ]=])
-  if(NOT CMARK_STATIC)
-    set(_CMARK_BUILD_SHARED_LIBS_DEFAULT YES)
+  if(NOT CSSG_STATIC)
+    set(_CSSG_BUILD_SHARED_LIBS_DEFAULT YES)
   else()
-    set(_CMARK_BUILD_SHARED_LIBS_DEFAULT NO)
+    set(_CSSG_BUILD_SHARED_LIBS_DEFAULT NO)
   endif()
 endif()
 
-option(CMARK_LIB_FUZZER "Build libFuzzer fuzzing harness" OFF)
-option(BUILD_SHARED_LIBS "Build the CMark library as shared"
-  ${_CMARK_BUILD_SHARED_LIBS_DEFAULT})
+option(CSSG_LIB_FUZZER "Build libFuzzer fuzzing harness" OFF)
+option(BUILD_SHARED_LIBS "Build the Cssg library as shared"
+  ${_CSSG_BUILD_SHARED_LIBS_DEFAULT})
 
 if(NOT MSVC)
   set(CMAKE_C_STANDARD 99)
@@ -85,14 +85,14 @@ endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Check integrity of node structure when compiled as debug
-add_compile_options($<$<CONFIG:Debug>:-DCMARK_DEBUG_NODES>)
+add_compile_options($<$<CONFIG:Debug>:-DCSSG_DEBUG_NODES>)
 
 # In order to maintain compatibility with older platforms which may not have a
 # recent version of CMake (i.e. are running CMake <3.3), we cannot simply use
 # the `add_compile_options` with a generator expression.  This uses the
 # `target_compile_options` with `PRIVATE` to add the flags only to the targets
-# so that CMark may be used in projects with non-C languages.
-function(cmark_add_compile_options target)
+# so that Cssg may be used in projects with non-C languages.
+function(cssg_add_compile_options target)
   if(MSVC)
     target_compile_definitions(${target} PRIVATE _CRT_SECURE_NO_WARNINGS)
   else()
@@ -106,7 +106,7 @@ function(cmark_add_compile_options target)
   if(CMAKE_BUILD_TYPE STREQUAL Ubsan)
     target_compile_options(${target} PRIVATE -fsanitize=undefined)
   endif()
-  if(CMARK_LIB_FUZZER)
+  if(CSSG_LIB_FUZZER)
     if(target MATCHES fuzz)
       target_compile_options(${target} PRIVATE -fsanitize=fuzzer)
       target_link_options(${target} PRIVATE -fsanitize=fuzzer)
@@ -127,7 +127,7 @@ if(BUILD_TESTING)
   add_subdirectory(api_test)
   add_subdirectory(test testdir)
 endif()
-if(CMARK_LIB_FUZZER)
+if(CSSG_LIB_FUZZER)
   add_subdirectory(fuzz)
 endif()
 

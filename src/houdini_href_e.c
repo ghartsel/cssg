@@ -54,7 +54,7 @@ static const char HREF_SAFE[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-int houdini_escape_href(cmark_strbuf *ob, const uint8_t *src, bufsize_t size) {
+int houdini_escape_href(cssg_strbuf *ob, const uint8_t *src, bufsize_t size) {
   static const uint8_t hex_chars[] = "0123456789ABCDEF";
   bufsize_t i = 0, org;
   uint8_t hex_str[3];
@@ -67,7 +67,7 @@ int houdini_escape_href(cmark_strbuf *ob, const uint8_t *src, bufsize_t size) {
       i++;
 
     if (likely(i > org))
-      cmark_strbuf_put(ob, src + org, i - org);
+      cssg_strbuf_put(ob, src + org, i - org);
 
     /* escaping */
     if (i >= size)
@@ -77,14 +77,14 @@ int houdini_escape_href(cmark_strbuf *ob, const uint8_t *src, bufsize_t size) {
     /* amp appears all the time in URLs, but needs
      * HTML-entity escaping to be inside an href */
     case '&':
-      cmark_strbuf_puts(ob, "&amp;");
+      cssg_strbuf_puts(ob, "&amp;");
       break;
 
     /* the single quote is a valid URL character
      * according to the standard; it needs HTML
      * entity escaping too */
     case '\'':
-      cmark_strbuf_puts(ob, "&#x27;");
+      cssg_strbuf_puts(ob, "&#x27;");
       break;
 
 /* the space can be escaped to %20 or a plus
@@ -93,7 +93,7 @@ int houdini_escape_href(cmark_strbuf *ob, const uint8_t *src, bufsize_t size) {
  * when building GET strings */
 #if 0
     case ' ':
-      cmark_strbuf_putc(ob, '+');
+      cssg_strbuf_putc(ob, '+');
       break;
 #endif
 
@@ -101,7 +101,7 @@ int houdini_escape_href(cmark_strbuf *ob, const uint8_t *src, bufsize_t size) {
     default:
       hex_str[1] = hex_chars[(src[i] >> 4) & 0xF];
       hex_str[2] = hex_chars[src[i] & 0xF];
-      cmark_strbuf_put(ob, hex_str, 3);
+      cssg_strbuf_put(ob, hex_str, 3);
     }
 
     i++;

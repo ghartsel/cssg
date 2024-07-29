@@ -13,11 +13,11 @@ BENCHSAMPLES=$(wildcard $(BENCHDIR)/samples/*.md)
 BENCHFILE=$(BENCHDIR)/benchinput.md
 ALLTESTS=alltests.md
 NUMRUNS?=10
-CMARK=$(BUILDDIR)/src/cmark
-CMARK_FUZZ=$(BUILDDIR)/src/cmark-fuzz
-PROG?=$(CMARK)
+CSSG=$(BUILDDIR)/src/cssg
+CSSG_FUZZ=$(BUILDDIR)/src/cssg-fuzz
+PROG?=$(CSSG)
 VERSION?=$(SPECVERSION)
-RELEASE?=cmark-$(VERSION)
+RELEASE?=cssg-$(VERSION)
 INSTALL_PREFIX?=/usr/local
 CLANG_CHECK?=clang-check
 CLANG_FORMAT=clang-format -style llvm -sort-includes=0 -i
@@ -25,9 +25,9 @@ AFL_PATH?=/usr/local/bin
 
 .PHONY: all cmake_build leakcheck clean fuzztest test debug ubsan asan mingw archive newbench bench format update-spec afl libFuzzer lint
 
-all: cmake_build man/man3/cmark.3
+all: cmake_build man/man3/cssg.3
 
-$(CMARK): cmake_build
+$(CSSG): cmake_build
 
 cmake_build: $(BUILDDIR)
 	@$(MAKE) -j2 -C $(BUILDDIR)
@@ -86,7 +86,7 @@ afl:
 	    -o fuzz/afl_results \
 	    -x fuzz/dictionary \
 	    -t 100 \
-	    $(CMARK) $(CMARK_OPTS)
+	    $(CSSG) $(CSSG_OPTS)
 
 libFuzzer:
 	cmake \
@@ -94,10 +94,10 @@ libFuzzer:
 	    -DCMAKE_C_COMPILER=clang \
 	    -DCMAKE_CXX_COMPILER=clang++ \
 	    -DCMAKE_BUILD_TYPE=Asan \
-	    -DCMARK_LIB_FUZZER=ON
+	    -DCSSG_LIB_FUZZER=ON
 	cmake --build $(BUILDDIR)
 	mkdir -p fuzz/corpus
-	$(BUILDDIR)/fuzz/cmark-fuzz \
+	$(BUILDDIR)/fuzz/cssg-fuzz \
 	    -dict=fuzz/dictionary \
 	    -max_len=1000 \
 	    -timeout=1 \
@@ -115,7 +115,7 @@ mingw:
 	cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain-mingw32.cmake -DCMAKE_INSTALL_PREFIX=$(MINGW_INSTALLDIR) ;\
 	$(MAKE) && $(MAKE) install
 
-man/man3/cmark.3: src/cmark.h | $(CMARK)
+man/man3/cssg.3: src/cssg.h | $(CSSG)
 	python man/make_man_page.py $< > $@ \
 
 archive:
@@ -161,7 +161,7 @@ $(ALLTESTS): $(SPEC)
 leakcheck: $(ALLTESTS)
 	for format in html man xml latex commonmark; do \
 	  for opts in "" "--smart"; do \
-	     echo "cmark -t $$format $$opts" ; \
+	     echo "cssg -t $$format $$opts" ; \
 	     valgrind -q --leak-check=full --dsymutil=yes --error-exitcode=1 $(PROG) -t $$format $$opts $(ALLTESTS) >/dev/null || exit 1;\
           done; \
 	done;
@@ -204,7 +204,7 @@ newbench:
 format:
 	$(CLANG_FORMAT) src/*.c src/*.h api_test/*.c api_test/*.h
 
-operf: $(CMARK)
+operf: $(CSSG)
 	operf $< < $(BENCHFILE) > /dev/null
 
 distclean: clean

@@ -1,11 +1,11 @@
-#include "cmark.h"
+#include "cssg.h"
 #include "chunk.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bufsize_t _scan_at(bufsize_t (*scanner)(const unsigned char *), cmark_chunk *c,
+bufsize_t _scan_at(bufsize_t (*scanner)(const unsigned char *), cssg_chunk *c,
                    bufsize_t offset);
 bufsize_t _scan_scheme(const unsigned char *p);
 bufsize_t _scan_autolink_uri(const unsigned char *p);

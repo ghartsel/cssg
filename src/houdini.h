@@ -1,5 +1,5 @@
-#ifndef CMARK_HOUDINI_H
-#define CMARK_HOUDINI_H
+#ifndef CSSG_HOUDINI_H
+#define CSSG_HOUDINI_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,15 +23,15 @@ extern "C" {
 #define HOUDINI_ESCAPED_SIZE(x) (((x)*12) / 10)
 #define HOUDINI_UNESCAPED_SIZE(x) (x)
 
-bufsize_t houdini_unescape_ent(cmark_strbuf *ob, const uint8_t *src,
+bufsize_t houdini_unescape_ent(cssg_strbuf *ob, const uint8_t *src,
                                bufsize_t size);
-int houdini_escape_html(cmark_strbuf *ob, const uint8_t *src,
+int houdini_escape_html(cssg_strbuf *ob, const uint8_t *src,
                          bufsize_t size, int secure);
-int houdini_unescape_html(cmark_strbuf *ob, const uint8_t *src,
+int houdini_unescape_html(cssg_strbuf *ob, const uint8_t *src,
                           bufsize_t size);
-void houdini_unescape_html_f(cmark_strbuf *ob, const uint8_t *src,
+void houdini_unescape_html_f(cssg_strbuf *ob, const uint8_t *src,
                              bufsize_t size);
-int houdini_escape_href(cmark_strbuf *ob, const uint8_t *src,
+int houdini_escape_href(cssg_strbuf *ob, const uint8_t *src,
                         bufsize_t size);
 
 #ifdef __cplusplus

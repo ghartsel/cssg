@@ -1,5 +1,5 @@
-#ifndef CMARK_API_TEST_HARNESS_H
-#define CMARK_API_TEST_HARNESS_H
+#ifndef CSSG_API_TEST_HARNESS_H
+#define CSSG_API_TEST_HARNESS_H
 
 #ifdef __cplusplus
 extern "C" {

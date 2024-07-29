@@ -21,21 +21,21 @@ sysname = platform.system()
 curdir = os.getcwd()
 
 if sysname == 'Darwin':
-    cmark = CDLL(curdir + "/build/src/libcmark.dylib")
+    cssg = CDLL(curdir + "/build/src/libcssg.dylib")
 else:
-    cmark = CDLL(curdir + "/build/src/libcmark.so")
+    cssg = CDLL(curdir + "/build/src/libcssg.so")
 
-parse_document = cmark.cmark_parse_document
+parse_document = cssg.cssg_parse_document
 parse_document.restype = c_void_p
 parse_document.argtypes = [c_char_p, c_long]
 
-render_man = cmark.cmark_render_man
+render_man = cssg.cssg_render_man
 render_man.restype = c_char_p
 render_man.argtypes = [c_void_p, c_long, c_long]
 
-cmark_version_string = cmark.cmark_version_string
-cmark_version_string.restype = c_char_p
-cmark_version_string.argtypes = []
+cssg_version_string = cssg.cssg_version_string
+cssg_version_string.restype = c_char_p
+cssg_version_string.argtypes = []
 
 def md2man(text):
     if sys.version_info >= (3,0):
@@ -50,9 +50,9 @@ def md2man(text):
 comment_start_re = re.compile('^\/\*\* ?')
 comment_delim_re = re.compile('^[/ ]\** ?')
 comment_end_re = re.compile('^ \**\/')
-function_re = re.compile('^ *(?:CMARK_EXPORT\s+)?(?P<type>(?:const\s+)?\w+(?:\s*[*])?)\s*(?P<name>\w+)\s*\((?P<args>[^)]*)\)')
+function_re = re.compile('^ *(?:CSSG_EXPORT\s+)?(?P<type>(?:const\s+)?\w+(?:\s*[*])?)\s*(?P<name>\w+)\s*\((?P<args>[^)]*)\)')
 blank_re = re.compile('^\s*$')
-macro_re = re.compile('CMARK_EXPORT *')
+macro_re = re.compile('CSSG_EXPORT *')
 typedef_start_re = re.compile('typedef.*{$')
 typedef_end_re = re.compile('}')
 single_quote_re = re.compile("(?<!\w)'([^']+)'(?!\w)")
@@ -72,9 +72,9 @@ else:
     print("Usage:  make_man_page.py sourcefile")
     exit(1)
 
-with open(sourcefile, 'r') as cmarkh:
+with open(sourcefile, 'r') as cssgh:
     state = 'default'
-    for line in cmarkh:
+    for line in cssgh:
         # state transition
         oldstate = state
         if comment_start_re.match(line):
@@ -133,5 +133,5 @@ with open(sourcefile, 'r') as cmarkh:
             chunk = []
             mdlines.append('\n')
 
-sys.stdout.write('.TH ' + os.path.basename(sourcefile).replace('.h','') + ' 3 "' + date.today().strftime('%B %d, %Y') + '" "cmark ' + cmark_version_string().decode('utf-8') + '" "Library Functions Manual"\n')
+sys.stdout.write('.TH ' + os.path.basename(sourcefile).replace('.h','') + ' 3 "' + date.today().strftime('%B %d, %Y') + '" "cssg ' + cssg_version_string().decode('utf-8') + '" "Library Functions Manual"\n')
 sys.stdout.write(''.join(mdlines))

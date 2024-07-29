@@ -1,17 +1,17 @@
-Why use `cmark` and not X?
+Why use `cssg` and not X?
 ==========================
 
 `hoedown`
 ---------
 
 `hoedown` (which derives from `sundown`) is slightly faster
-than `cmark` in our benchmarks (0.21s vs. 0.29s).  But both
+than `cssg` in our benchmarks (0.21s vs. 0.29s).  But both
 are much faster than any other available implementations.
 
 `hoedown` boasts of including "protection against all possible
 DOS attacks," but there are some chinks in the armor:
 
-    % time python -c 'print(("[" * 50000) + "a" + ("]" * 50000))' | cmark
+    % time python -c 'print(("[" * 50000) + "a" + ("]" * 50000))' | cssg
     ...
     user 0m0.073s
     % time python -c 'print(("[" * 50000) + "a" + ("]" * 50000))' | hoedown
@@ -90,12 +90,12 @@ v3.0.3):
 `discount`
 ----------
 
-`cmark` is about six times faster.
+`cssg` is about six times faster.
 
 `kramdown`
 ----------
 
-`cmark` is about a hundred times faster.
+`cssg` is about a hundred times faster.
 
 `kramdown` also gets tied in knots by pathological input like
 

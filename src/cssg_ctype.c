@@ -1,10 +1,10 @@
 #include <stdint.h>
 
-#include "cmark_ctype.h"
+#include "cssg_ctype.h"
 
 /** 1 = space, 2 = punct, 3 = digit, 4 = alpha, 0 = other
  */
-static const uint8_t cmark_ctype_class[256] = {
+static const uint8_t cssg_ctype_class[256] = {
     /*      0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
     /* 0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
     /* 1 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -26,13 +26,13 @@ static const uint8_t cmark_ctype_class[256] = {
 /**
  * Returns 1 if c is a "whitespace" character as defined by the spec.
  */
-int cmark_isspace(char c) { return cmark_ctype_class[(uint8_t)c] == 1; }
+int cssg_isspace(char c) { return cssg_ctype_class[(uint8_t)c] == 1; }
 
 /**
  * Returns 1 if c is an ascii punctuation character.
  */
-int cmark_ispunct(char c) { return cmark_ctype_class[(uint8_t)c] == 2; }
+int cssg_ispunct(char c) { return cssg_ctype_class[(uint8_t)c] == 2; }
 
-int cmark_isdigit(char c) { return cmark_ctype_class[(uint8_t)c] == 3; }
+int cssg_isdigit(char c) { return cssg_ctype_class[(uint8_t)c] == 3; }
 
-int cmark_isalpha(char c) { return cmark_ctype_class[(uint8_t)c] == 4; }
+int cssg_isalpha(char c) { return cssg_ctype_class[(uint8_t)c] == 4; }

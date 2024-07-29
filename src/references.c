@@ -1,12 +1,12 @@
-#include "cmark.h"
+#include "cssg.h"
 #include "utf8.h"
 #include "parser.h"
 #include "references.h"
 #include "inlines.h"
 #include "chunk.h"
 
-static void reference_free(cmark_reference_map *map, cmark_reference *ref) {
-  cmark_mem *mem = map->mem;
+static void reference_free(cssg_reference_map *map, cssg_reference *ref) {
+  cssg_mem *mem = map->mem;
   if (ref != NULL) {
     mem->free(ref->label);
     mem->free(ref->url);
@@ -19,8 +19,8 @@ static void reference_free(cmark_reference_map *map, cmark_reference *ref) {
 // remove leading/trailing whitespace, case fold
 // Return NULL if the reference name is actually empty (i.e. composed
 // solely from whitespace)
-static unsigned char *normalize_reference(cmark_mem *mem, cmark_chunk *ref) {
-  cmark_strbuf normalized = CMARK_BUF_INIT(mem);
+static unsigned char *normalize_reference(cssg_mem *mem, cssg_chunk *ref) {
+  cssg_strbuf normalized = CSSG_BUF_INIT(mem);
   unsigned char *result;
 
   if (ref == NULL)
@@ -29,11 +29,11 @@ static unsigned char *normalize_reference(cmark_mem *mem, cmark_chunk *ref) {
   if (ref->len == 0)
     return NULL;
 
-  cmark_utf8proc_case_fold(&normalized, ref->data, ref->len);
-  cmark_strbuf_trim(&normalized);
-  cmark_strbuf_normalize_whitespace(&normalized);
+  cssg_utf8proc_case_fold(&normalized, ref->data, ref->len);
+  cssg_strbuf_trim(&normalized);
+  cssg_strbuf_normalize_whitespace(&normalized);
 
-  result = cmark_strbuf_detach(&normalized);
+  result = cssg_strbuf_detach(&normalized);
   assert(result);
 
   if (result[0] == '\0') {
@@ -44,9 +44,9 @@ static unsigned char *normalize_reference(cmark_mem *mem, cmark_chunk *ref) {
   return result;
 }
 
-void cmark_reference_create(cmark_reference_map *map, cmark_chunk *label,
-                            cmark_chunk *url, cmark_chunk *title) {
-  cmark_reference *ref;
+void cssg_reference_create(cssg_reference_map *map, cssg_chunk *label,
+                            cssg_chunk *url, cssg_chunk *title) {
+  cssg_reference *ref;
   unsigned char *reflabel = normalize_reference(map->mem, label);
 
   /* empty reference name, or composed from only whitespace */
@@ -55,10 +55,10 @@ void cmark_reference_create(cmark_reference_map *map, cmark_chunk *label,
 
   assert(map->sorted == NULL);
 
-  ref = (cmark_reference *)map->mem->calloc(1, sizeof(*ref));
+  ref = (cssg_reference *)map->mem->calloc(1, sizeof(*ref));
   ref->label = reflabel;
-  ref->url = cmark_clean_url(map->mem, url);
-  ref->title = cmark_clean_title(map->mem, title);
+  ref->url = cssg_clean_url(map->mem, url);
+  ref->title = cssg_clean_title(map->mem, title);
   ref->age = map->size;
   ref->next = map->refs;
 
@@ -78,29 +78,29 @@ labelcmp(const unsigned char *a, const unsigned char *b) {
 
 static int
 refcmp(const void *p1, const void *p2) {
-  cmark_reference *r1 = *(cmark_reference **)p1;
-  cmark_reference *r2 = *(cmark_reference **)p2;
+  cssg_reference *r1 = *(cssg_reference **)p1;
+  cssg_reference *r2 = *(cssg_reference **)p2;
   int res = labelcmp(r1->label, r2->label);
   return res ? res : ((int)r1->age - (int)r2->age);
 }
 
 static int
 refsearch(const void *label, const void *p2) {
-  cmark_reference *ref = *(cmark_reference **)p2;
+  cssg_reference *ref = *(cssg_reference **)p2;
   return labelcmp((const unsigned char *)label, ref->label);
 }
 
-static void sort_references(cmark_reference_map *map) {
+static void sort_references(cssg_reference_map *map) {
   unsigned int i = 0, last = 0, size = map->size;
-  cmark_reference *r = map->refs, **sorted = NULL;
+  cssg_reference *r = map->refs, **sorted = NULL;
 
-  sorted = (cmark_reference **)map->mem->calloc(size, sizeof(cmark_reference *));
+  sorted = (cssg_reference **)map->mem->calloc(size, sizeof(cssg_reference *));
   while (r) {
     sorted[i++] = r;
     r = r->next;
   }
 
-  qsort(sorted, size, sizeof(cmark_reference *), refcmp);
+  qsort(sorted, size, sizeof(cssg_reference *), refcmp);
 
   for (i = 1; i < size; i++) {
     if (labelcmp(sorted[i]->label, sorted[last]->label) != 0)
@@ -112,10 +112,10 @@ static void sort_references(cmark_reference_map *map) {
 
 // Returns reference if refmap contains a reference with matching
 // label, otherwise NULL.
-cmark_reference *cmark_reference_lookup(cmark_reference_map *map,
-                                        cmark_chunk *label) {
-  cmark_reference **ref = NULL;
-  cmark_reference *r = NULL;
+cssg_reference *cssg_reference_lookup(cssg_reference_map *map,
+                                        cssg_chunk *label) {
+  cssg_reference **ref = NULL;
+  cssg_reference *r = NULL;
   unsigned char *norm;
 
   if (label->len < 1 || label->len > MAX_LINK_LABEL_LENGTH)
@@ -131,7 +131,7 @@ cmark_reference *cmark_reference_lookup(cmark_reference_map *map,
   if (!map->sorted)
     sort_references(map);
 
-  ref = (cmark_reference **)bsearch(norm, map->sorted, map->size, sizeof(cmark_reference *),
+  ref = (cssg_reference **)bsearch(norm, map->sorted, map->size, sizeof(cssg_reference *),
                 refsearch);
   map->mem->free(norm);
 
@@ -146,15 +146,15 @@ cmark_reference *cmark_reference_lookup(cmark_reference_map *map,
   return r;
 }
 
-void cmark_reference_map_free(cmark_reference_map *map) {
-  cmark_reference *ref;
+void cssg_reference_map_free(cssg_reference_map *map) {
+  cssg_reference *ref;
 
   if (map == NULL)
     return;
 
   ref = map->refs;
   while (ref) {
-    cmark_reference *next = ref->next;
+    cssg_reference *next = ref->next;
     reference_free(map, ref);
     ref = next;
   }
@@ -163,9 +163,9 @@ void cmark_reference_map_free(cmark_reference_map *map) {
   map->mem->free(map);
 }
 
-cmark_reference_map *cmark_reference_map_new(cmark_mem *mem) {
-  cmark_reference_map *map =
-      (cmark_reference_map *)mem->calloc(1, sizeof(cmark_reference_map));
+cssg_reference_map *cssg_reference_map_new(cssg_mem *mem) {
+  cssg_reference_map *map =
+      (cssg_reference_map *)mem->calloc(1, sizeof(cssg_reference_map));
   map->mem = mem;
   return map;
 }

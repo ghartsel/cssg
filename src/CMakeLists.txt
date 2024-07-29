@@ -1,15 +1,15 @@
 
-configure_file(cmark_version.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/cmark_version.h)
-configure_file(libcmark.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/libcmark.pc
+configure_file(cssg_version.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/cssg_version.h)
+configure_file(libcssg.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/libcssg.pc
   @ONLY)
 
-add_library(cmark
+add_library(cssg
   blocks.c
   buffer.c
-  cmark.c
-  cmark_ctype.c
+  cssg.c
+  cssg_ctype.c
   commonmark.c
   houdini_href_e.c
   houdini_html_e.c
@@ -26,75 +26,75 @@ add_library(cmark
   scanners.re
   utf8.c
   xml.c)
-cmark_add_compile_options(cmark)
-set_target_properties(cmark PROPERTIES
-  OUTPUT_NAME "cmark"
+cssg_add_compile_options(cssg)
+set_target_properties(cssg PROPERTIES
+  OUTPUT_NAME "cssg"
   # Avoid name clash between PROGRAM and LIBRARY pdb files.
-  PDB_NAME libcmark
+  PDB_NAME libcssg
   POSITION_INDEPENDENT_CODE YES
   # Include minor version and patch level in soname for now.
   SOVERSION ${PROJECT_VERSION}
   VERSION ${PROJECT_VERSION})
 if(NOT BUILD_SHARED_LIBS)
-  target_compile_definitions(cmark PUBLIC
-    CMARK_STATIC_DEFINE)
+  target_compile_definitions(cssg PUBLIC
+    CSSG_STATIC_DEFINE)
 endif()
-target_include_directories(cmark INTERFACE
+target_include_directories(cssg INTERFACE
   $<INSTALL_INTERFACE:include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
-generate_export_header(cmark
+generate_export_header(cssg
   BASE_NAME ${PROJECT_NAME})
 
 # FIXME(compnerd) this should be removed, but exists solely to allow a migration
 # path for OSS Fuzz.
-add_custom_target(cmark_static DEPENDS cmark)
+add_custom_target(cssg_static DEPENDS cssg)
 
-add_executable(cmark_exe
+add_executable(cssg_exe
   main.c)
-cmark_add_compile_options(cmark_exe)
-set_target_properties(cmark_exe PROPERTIES
-  OUTPUT_NAME "cmark"
+cssg_add_compile_options(cssg_exe)
+set_target_properties(cssg_exe PROPERTIES
+  OUTPUT_NAME "cssg"
   INSTALL_RPATH "${Base_rpath}")
-target_link_libraries(cmark_exe PRIVATE
-  cmark)
+target_link_libraries(cssg_exe PRIVATE
+  cssg)
 
-install(TARGETS cmark_exe cmark
-  EXPORT cmark-targets
+install(TARGETS cssg_exe cssg
+  EXPORT cssg-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libcmark.pc
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libcssg.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 install(FILES
-  cmark.h
-  ${CMAKE_CURRENT_BINARY_DIR}/cmark_export.h
-  ${CMAKE_CURRENT_BINARY_DIR}/cmark_version.h
+  cssg.h
+  ${CMAKE_CURRENT_BINARY_DIR}/cssg_export.h
+  ${CMAKE_CURRENT_BINARY_DIR}/cssg_version.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   )
 
-# generate cmark-config.cmake and cmark-config-version.cmake files
+# generate cssg-config.cmake and cssg-config-version.cmake files
 configure_package_config_file(
-  "cmarkConfig.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/generated/cmark-config.cmake"
-  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cmark")
+  "cssgConfig.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/cssg-config.cmake"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cssg")
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/generated/cmark-config-version.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/cssg-config-version.cmake"
   VERSION ${PROJECT_VERSION}
   COMPATIBILITY SameMajorVersion)
 # install config and version file
 install(
-  FILES "${CMAKE_CURRENT_BINARY_DIR}/generated/cmark-config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/generated/cmark-config-version.cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cmark"
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/generated/cssg-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/generated/cssg-config-version.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cssg"
 )
 # install targets file
 install(
-  EXPORT "cmark-targets"
-  NAMESPACE "cmark::"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cmark"
+  EXPORT "cssg-targets"
+  NAMESPACE "cssg::"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cssg"
 )

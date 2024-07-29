@@ -1,5 +1,5 @@
-#ifndef CMARK_API_TEST_CPLUSPLUS_H
-#define CMARK_API_TEST_CPLUSPLUS_H
+#ifndef CSSG_API_TEST_CPLUSPLUS_H
+#define CSSG_API_TEST_CPLUSPLUS_H
 
 #include "harness.h"
 

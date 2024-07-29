@@ -9,7 +9,7 @@ Scott Chacon.
 |Implementation     |  Time (sec)|
 |-------------------|-----------:|
 | **commonmark.js** |    0.59    |
-| **cmark**         |    0.12    |
+| **cssg**         |    0.12    |
 | **md4c**          |    0.04    |
 
 To run these benchmarks, use `make bench PROG=/path/to/program`.

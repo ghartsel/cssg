@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cmark.h"
+#include "cssg.h"
 #include "node.h"
 #include "buffer.h"
 #include "utf8.h"
@@ -16,75 +16,75 @@
 #define BLANKLINE() renderer->blankline(renderer)
 #define LIST_NUMBER_SIZE 20
 
-// Functions to convert cmark_nodes to groff man strings.
-static void S_outc(cmark_renderer *renderer, cmark_escaping escape, int32_t c,
+// Functions to convert cssg_nodes to groff man strings.
+static void S_outc(cssg_renderer *renderer, cssg_escaping escape, int32_t c,
                    unsigned char nextc) {
   (void)(nextc);
 
   if (escape == LITERAL) {
-    cmark_render_code_point(renderer, c);
+    cssg_render_code_point(renderer, c);
     return;
   }
 
   switch (c) {
   case 46:
     if (renderer->begin_line) {
-      cmark_render_ascii(renderer, "\\&.");
+      cssg_render_ascii(renderer, "\\&.");
     } else {
-      cmark_render_code_point(renderer, c);
+      cssg_render_code_point(renderer, c);
     }
     break;
   case 39:
     if (renderer->begin_line) {
-      cmark_render_ascii(renderer, "\\&'");
+      cssg_render_ascii(renderer, "\\&'");
     } else {
-      cmark_render_code_point(renderer, c);
+      cssg_render_code_point(renderer, c);
     }
     break;
   case 45:
-    cmark_render_ascii(renderer, "\\-");
+    cssg_render_ascii(renderer, "\\-");
     break;
   case 92:
-    cmark_render_ascii(renderer, "\\e");
+    cssg_render_ascii(renderer, "\\e");
     break;
   case 8216: // left single quote
-    cmark_render_ascii(renderer, "\\[oq]");
+    cssg_render_ascii(renderer, "\\[oq]");
     break;
   case 8217: // right single quote
-    cmark_render_ascii(renderer, "\\[cq]");
+    cssg_render_ascii(renderer, "\\[cq]");
     break;
   case 8220: // left double quote
-    cmark_render_ascii(renderer, "\\[lq]");
+    cssg_render_ascii(renderer, "\\[lq]");
     break;
   case 8221: // right double quote
-    cmark_render_ascii(renderer, "\\[rq]");
+    cssg_render_ascii(renderer, "\\[rq]");
     break;
   case 8212: // em dash
-    cmark_render_ascii(renderer, "\\[em]");
+    cssg_render_ascii(renderer, "\\[em]");
     break;
   case 8211: // en dash
-    cmark_render_ascii(renderer, "\\[en]");
+    cssg_render_ascii(renderer, "\\[en]");
     break;
   default:
-    cmark_render_code_point(renderer, c);
+    cssg_render_code_point(renderer, c);
   }
 }
 
-static int S_render_node(cmark_renderer *renderer, cmark_node *node,
-                         cmark_event_type ev_type, int options) {
-  cmark_node *tmp;
+static int S_render_node(cssg_renderer *renderer, cssg_node *node,
+                         cssg_event_type ev_type, int options) {
+  cssg_node *tmp;
   int list_number;
-  bool entering = (ev_type == CMARK_EVENT_ENTER);
-  bool allow_wrap = renderer->width > 0 && !(CMARK_OPT_NOBREAKS & options);
+  bool entering = (ev_type == CSSG_EVENT_ENTER);
+  bool allow_wrap = renderer->width > 0 && !(CSSG_OPT_NOBREAKS & options);
   struct block_number *new_block_number;
-  cmark_mem *allocator = cmark_get_default_mem_allocator();
+  cssg_mem *allocator = cssg_get_default_mem_allocator();
 
   // avoid unused parameter error:
   (void)(options);
 
   // indent inside nested lists
   if (renderer->block_number_in_list_item &&
-      node->type < CMARK_NODE_FIRST_INLINE) {
+      node->type < CSSG_NODE_FIRST_INLINE) {
     if (entering) {
       renderer->block_number_in_list_item->number += 1;
       if (renderer->block_number_in_list_item->number == 2) {
@@ -96,10 +96,10 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
   }
 
   switch (node->type) {
-  case CMARK_NODE_DOCUMENT:
+  case CSSG_NODE_DOCUMENT:
     break;
 
-  case CMARK_NODE_BLOCK_QUOTE:
+  case CSSG_NODE_BLOCK_QUOTE:
     if (entering) {
       CR();
       LIT(".RS");
@@ -111,10 +111,10 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
     }
     break;
 
-  case CMARK_NODE_LIST:
+  case CSSG_NODE_LIST:
     break;
 
-  case CMARK_NODE_ITEM:
+  case CSSG_NODE_ITEM:
     if (entering) {
       new_block_number = allocator->calloc(1, sizeof(struct block_number));
       new_block_number->number = 0;
@@ -122,10 +122,10 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
       renderer->block_number_in_list_item = new_block_number;
       CR();
       LIT(".IP ");
-      if (cmark_node_get_list_type(node->parent) == CMARK_BULLET_LIST) {
+      if (cssg_node_get_list_type(node->parent) == CSSG_BULLET_LIST) {
         LIT("\\[bu] 2");
       } else {
-        list_number = cmark_node_get_list_start(node->parent);
+        list_number = cssg_node_get_list_start(node->parent);
         tmp = node;
         while (tmp->prev) {
           tmp = tmp->prev;
@@ -151,45 +151,45 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
     }
     break;
 
-  case CMARK_NODE_HEADING:
+  case CSSG_NODE_HEADING:
     if (entering) {
       CR();
-      LIT(cmark_node_get_heading_level(node) == 1 ? ".SH" : ".SS");
+      LIT(cssg_node_get_heading_level(node) == 1 ? ".SH" : ".SS");
       CR();
     } else {
       CR();
     }
     break;
 
-  case CMARK_NODE_CODE_BLOCK:
+  case CSSG_NODE_CODE_BLOCK:
     CR();
     LIT(".IP\n.nf\n\\f[C]\n");
-    OUT(cmark_node_get_literal(node), false, NORMAL);
+    OUT(cssg_node_get_literal(node), false, NORMAL);
     CR();
     LIT("\\f[]\n.fi");
     CR();
     break;
 
-  case CMARK_NODE_HTML_BLOCK:
+  case CSSG_NODE_HTML_BLOCK:
     break;
 
-  case CMARK_NODE_CUSTOM_BLOCK:
+  case CSSG_NODE_CUSTOM_BLOCK:
     CR();
-    OUT(entering ? cmark_node_get_on_enter(node) : cmark_node_get_on_exit(node),
+    OUT(entering ? cssg_node_get_on_enter(node) : cssg_node_get_on_exit(node),
         false, LITERAL);
     CR();
     break;
 
-  case CMARK_NODE_THEMATIC_BREAK:
+  case CSSG_NODE_THEMATIC_BREAK:
     CR();
     LIT(".PP\n  *  *  *  *  *");
     CR();
     break;
 
-  case CMARK_NODE_PARAGRAPH:
+  case CSSG_NODE_PARAGRAPH:
     if (entering) {
       // no blank line if first paragraph in list:
-      if (node->parent && node->parent->type == CMARK_NODE_ITEM &&
+      if (node->parent && node->parent->type == CSSG_NODE_ITEM &&
           node->prev == NULL) {
         // no blank line or .PP
       } else {
@@ -202,41 +202,41 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
     }
     break;
 
-  case CMARK_NODE_TEXT:
-    OUT(cmark_node_get_literal(node), allow_wrap, NORMAL);
+  case CSSG_NODE_TEXT:
+    OUT(cssg_node_get_literal(node), allow_wrap, NORMAL);
     break;
 
-  case CMARK_NODE_LINEBREAK:
+  case CSSG_NODE_LINEBREAK:
     LIT(".PD 0\n.P\n.PD");
     CR();
     break;
 
-  case CMARK_NODE_SOFTBREAK:
-    if (options & CMARK_OPT_HARDBREAKS) {
+  case CSSG_NODE_SOFTBREAK:
+    if (options & CSSG_OPT_HARDBREAKS) {
       LIT(".PD 0\n.P\n.PD");
       CR();
-    } else if (renderer->width == 0 && !(CMARK_OPT_NOBREAKS & options)) {
+    } else if (renderer->width == 0 && !(CSSG_OPT_NOBREAKS & options)) {
       CR();
     } else {
       OUT(" ", allow_wrap, LITERAL);
     }
     break;
 
-  case CMARK_NODE_CODE:
+  case CSSG_NODE_CODE:
     LIT("\\f[C]");
-    OUT(cmark_node_get_literal(node), allow_wrap, NORMAL);
+    OUT(cssg_node_get_literal(node), allow_wrap, NORMAL);
     LIT("\\f[]");
     break;
 
-  case CMARK_NODE_HTML_INLINE:
+  case CSSG_NODE_HTML_INLINE:
     break;
 
-  case CMARK_NODE_CUSTOM_INLINE:
-    OUT(entering ? cmark_node_get_on_enter(node) : cmark_node_get_on_exit(node),
+  case CSSG_NODE_CUSTOM_INLINE:
+    OUT(entering ? cssg_node_get_on_enter(node) : cssg_node_get_on_exit(node),
         false, LITERAL);
     break;
 
-  case CMARK_NODE_STRONG:
+  case CSSG_NODE_STRONG:
     if (entering) {
       LIT("\\f[B]");
     } else {
@@ -244,7 +244,7 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
     }
     break;
 
-  case CMARK_NODE_EMPH:
+  case CSSG_NODE_EMPH:
     if (entering) {
       LIT("\\f[I]");
     } else {
@@ -252,15 +252,15 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
     }
     break;
 
-  case CMARK_NODE_LINK:
+  case CSSG_NODE_LINK:
     if (!entering) {
       LIT(" (");
-      OUT(cmark_node_get_url(node), allow_wrap, URL);
+      OUT(cssg_node_get_url(node), allow_wrap, URL);
       LIT(")");
     }
     break;
 
-  case CMARK_NODE_IMAGE:
+  case CSSG_NODE_IMAGE:
     if (entering) {
       LIT("[IMAGE: ");
     } else {
@@ -276,6 +276,6 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
   return 1;
 }
 
-char *cmark_render_man(cmark_node *root, int options, int width) {
-  return cmark_render(root, options, width, S_outc, S_render_node);
+char *cssg_render_man(cssg_node *root, int options, int width) {
+  return cssg_render(root, options, width, S_outc, S_render_node);
 }
