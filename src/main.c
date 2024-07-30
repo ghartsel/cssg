@@ -30,8 +30,7 @@ typedef enum {
 void print_usage(void) {
   printf("Usage:   cssg [FILE*]\n");
   printf("Options:\n");
-  printf("  --to, -t FORMAT  Specify output format (html, xml, man, "
-         "commonmark)\n");
+  printf("  --to, -t FORMAT  Specify output format (html, xml, man, commonmark)\n");
   printf("  --width WIDTH    Specify wrap width (default 0 = nowrap)\n");
   printf("  --sourcepos      Include source position attribute\n");
   printf("  --hardbreaks     Treat newlines as hard line breaks\n");

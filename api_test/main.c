@@ -631,51 +631,6 @@ static void render_man(test_batch_runner *runner) {
   cssg_node_free(doc);
 }
 
-static void render_latex(test_batch_runner *runner) {
-  char *latex;
-
-  static const char markdown[] = "foo *bar* $%\n"
-                                 "\n"
-                                 "- Lorem ipsum dolor sit amet,\n"
-                                 "  consectetur adipiscing elit,\n"
-                                 "- sed do eiusmod tempor incididunt\n"
-                                 "  ut labore et dolore magna aliqua.\n";
-  cssg_node *doc =
-      cssg_parse_document(markdown, sizeof(markdown) - 1, CSSG_OPT_DEFAULT);
-
-  latex = cssg_render_latex(doc, CSSG_OPT_DEFAULT, 20);
-  STR_EQ(runner, latex, "foo \\emph{bar} \\$\\%\n"
-                        "\n"
-                        "\\begin{itemize}\n"
-                        "\\item Lorem ipsum\n"
-                        "dolor sit amet,\n"
-                        "consectetur\n"
-                        "adipiscing elit,\n"
-                        "\n"
-                        "\\item sed do eiusmod\n"
-                        "tempor incididunt ut\n"
-                        "labore et dolore\n"
-                        "magna aliqua.\n"
-                        "\n"
-                        "\\end{itemize}\n",
-         "render document with wrapping");
-  free(latex);
-  latex = cssg_render_latex(doc, CSSG_OPT_DEFAULT, 0);
-  STR_EQ(runner, latex, "foo \\emph{bar} \\$\\%\n"
-                        "\n"
-                        "\\begin{itemize}\n"
-                        "\\item Lorem ipsum dolor sit amet,\n"
-                        "consectetur adipiscing elit,\n"
-                        "\n"
-                        "\\item sed do eiusmod tempor incididunt\n"
-                        "ut labore et dolore magna aliqua.\n"
-                        "\n"
-                        "\\end{itemize}\n",
-         "render document without wrapping");
-  free(latex);
-  cssg_node_free(doc);
-}
-
 static void render_commonmark(test_batch_runner *runner) {
   char *commonmark;
 
@@ -1154,7 +1109,6 @@ int main(void) {
   render_html(runner);
   render_xml(runner);
   render_man(runner);
-  render_latex(runner);
   render_commonmark(runner);
   utf8(runner);
   line_endings(runner);

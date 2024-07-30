@@ -159,7 +159,7 @@ $(ALLTESTS): $(SPEC)
 	python3 test/spec_tests.py --spec $< --dump-tests | python3 -c 'import json; import sys; tests = json.loads(sys.stdin.read()); print("\n".join([test["markdown"] for test in tests]))' > $@
 
 leakcheck: $(ALLTESTS)
-	for format in html man xml latex commonmark; do \
+	for format in html man xml commonmark; do \
 	  for opts in "" "--smart"; do \
 	     echo "cssg -t $$format $$opts" ; \
 	     valgrind -q --leak-check=full --dsymutil=yes --error-exitcode=1 $(PROG) -t $$format $$opts $(ALLTESTS) >/dev/null || exit 1;\

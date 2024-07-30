@@ -64,7 +64,6 @@ int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     if (doc != NULL) {
       free(cssg_render_commonmark(doc, options, fuzz_config.width));
       free(cssg_render_html(doc, options));
-      free(cssg_render_latex(doc, options, fuzz_config.width));
       free(cssg_render_man(doc, options, fuzz_config.width));
       free(cssg_render_xml(doc, options));
 
