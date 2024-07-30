@@ -17,7 +17,6 @@ add_library(cssg
   html.c
   inlines.c
   iterator.c
-  latex.c
   man.c
   node.c
   references.c

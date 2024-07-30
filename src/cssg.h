@@ -562,12 +562,6 @@ char *cssg_render_man(cssg_node *root, int options, int width);
 CSSG_EXPORT
 char *cssg_render_commonmark(cssg_node *root, int options, int width);
 
-/** Render a 'node' tree as a LaTeX document.
- * It is the caller's responsibility to free the returned buffer.
- */
-CSSG_EXPORT
-char *cssg_render_latex(cssg_node *root, int options, int width);
-
 /**
  * ## Options
  */

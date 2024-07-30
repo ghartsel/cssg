@@ -25,14 +25,13 @@ typedef enum {
   FORMAT_XML,
   FORMAT_MAN,
   FORMAT_COMMONMARK,
-  FORMAT_LATEX
 } writer_format;
 
 void print_usage(void) {
   printf("Usage:   cssg [FILE*]\n");
   printf("Options:\n");
   printf("  --to, -t FORMAT  Specify output format (html, xml, man, "
-         "commonmark, latex)\n");
+         "commonmark)\n");
   printf("  --width WIDTH    Specify wrap width (default 0 = nowrap)\n");
   printf("  --sourcepos      Include source position attribute\n");
   printf("  --hardbreaks     Treat newlines as hard line breaks\n");
@@ -61,9 +60,6 @@ static void print_document(cssg_node *document, writer_format writer,
     break;
   case FORMAT_COMMONMARK:
     result = cssg_render_commonmark(document, options, width);
-    break;
-  case FORMAT_LATEX:
-    result = cssg_render_latex(document, options, width);
     break;
   default:
     fprintf(stderr, "Unknown format %d\n", writer);
@@ -146,8 +142,6 @@ int main(int argc, char *argv[]) {
           writer = FORMAT_XML;
         } else if (strcmp(argv[i], "commonmark") == 0) {
           writer = FORMAT_COMMONMARK;
-        } else if (strcmp(argv[i], "latex") == 0) {
-          writer = FORMAT_LATEX;
         } else {
           fprintf(stderr, "Unknown format %s\n", argv[i]);
           exit(1);
