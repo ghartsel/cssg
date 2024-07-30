@@ -35,7 +35,7 @@ void print_usage(void) {
   printf("  --version        Print version\n");
 }
 
-static void print_document(cssg_node *document, writer_format writer,
+static void render_topic(cssg_node *document, writer_format writer,
                            int options, int width) {
   char *result;
 
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
   document = cssg_parser_finish(parser);
   cssg_parser_free(parser);
 
-  print_document(document, writer, options, width);
+  render_topic(document, writer, options, width);
 
   cssg_node_free(document);
 
