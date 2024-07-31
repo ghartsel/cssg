@@ -11,6 +11,8 @@
 #include "houdini.h"
 #include "scanners.h"
 
+#include "html.h"
+
 #define BUFFER_SIZE 100
 
 // Functions to convert cssg_nodes to HTML strings.
@@ -78,6 +80,21 @@ static int S_render_node(cssg_node *node, cssg_event_type ev_type,
 
   switch (node->type) {
   case CSSG_NODE_DOCUMENT:
+    if (entering) {
+      cssg_strbuf_puts(html, htmlOpen);
+      cssg_strbuf_puts(html, htmlHead);
+      cssg_strbuf_puts(html, bodyOpen);
+      cssg_strbuf_puts(html, nav);
+      cssg_strbuf_puts(html, mainHTML);
+      cssg_strbuf_puts(html, article);
+      cssg_strbuf_puts(html, headerArticle);
+      cssg_strbuf_puts(html, asideArticle);
+      cssg_strbuf_puts(html, mainArticle);
+    }
+    else {
+      cssg_strbuf_puts(html, htmlFooter);
+      cssg_strbuf_puts(html, htmlTerminal);
+    }
     break;
 
   case CSSG_NODE_BLOCK_QUOTE:
