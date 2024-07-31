@@ -21,6 +21,11 @@ typedef enum {
   FORMAT_COMMONMARK,
 } writer_format;
 
+const char *fList[2] = {
+  "short-sample.md",
+  "test.md"
+};
+
 void print_usage(void) {
   printf("Usage:   cssg [FILE*]\n");
   printf("Options:\n");
@@ -62,7 +67,7 @@ static void render_topic(cssg_node *document, writer_format writer, int options)
 
 int main(int argc, char *argv[]) {
   int *files;
-  char buffer[4096];
+  char buffer[8192];
   cssg_parser *parser;
   size_t bytes;
   cssg_node *document;
@@ -73,34 +78,35 @@ int main(int argc, char *argv[]) {
   _setmode(_fileno(stdout), _O_BINARY);
 #endif
 
-  files = (int *)calloc(argc, sizeof(*files));
+  for (int i = 0; i < (int)(sizeof(fList)/sizeof(fList[0])); i++) {
+    files = (int *)calloc(argc, sizeof(*files));
 
-  parser = cssg_parser_new(options);
+    parser = cssg_parser_new(options);
 
-  FILE *fp = fopen(argv[1], "rb");
-  if (fp == NULL) {
-    fprintf(stderr, "Error opening file %s: %s\n", argv[1], strerror(errno));
-    exit(1);
-  }
-
-  while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
-    cssg_parser_feed(parser, buffer, bytes);
-    if (bytes < sizeof(buffer)) {
-      break;
+    FILE *fp = fopen(fList[i], "rb");
+    if (fp == NULL) {
+      fprintf(stderr, "Error opening file %s: %s\n", argv[1], strerror(errno));
+      exit(1);
     }
+
+    while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+      cssg_parser_feed(parser, buffer, bytes);
+      if (bytes < sizeof(buffer)) {
+        break;
+      }
+    }
+
+    fclose(fp);
+
+    document = cssg_parser_finish(parser);
+    cssg_parser_free(parser);
+
+    // writer options: FORMAT_MAN, FORMAT_HTML, FORMAT_XML, FORMAT_COMMONMARK
+    render_topic(document, FORMAT_HTML, options);
+
+    cssg_node_free(document);
+
+    free(files);
   }
-
-  fclose(fp);
-
-  document = cssg_parser_finish(parser);
-  cssg_parser_free(parser);
-
-  // writer options: FORMAT_MAN, FORMAT_HTML, FORMAT_XML, FORMAT_COMMONMARK
-  render_topic(document, FORMAT_HTML, options);
-
-  cssg_node_free(document);
-
-  free(files);
-
   return 0;
 }
