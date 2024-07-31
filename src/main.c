@@ -25,7 +25,6 @@ void print_usage(void) {
   printf("Usage:   cssg [FILE*]\n");
   printf("Options:\n");
   printf("  --to, -t FORMAT  Specify output format (html, xml, man, commonmark)\n");
-  printf("  --width WIDTH    Specify wrap width (default 0 = nowrap)\n");
   printf("  --sourcepos      Include source position attribute\n");
   printf("  --hardbreaks     Treat newlines as hard line breaks\n");
   printf("  --nobreaks       Render soft line breaks as spaces\n");
@@ -37,8 +36,7 @@ void print_usage(void) {
   printf("  --version        Print version\n");
 }
 
-static void render_topic(cssg_node *document, writer_format writer,
-                           int options, int width) {
+static void render_topic(cssg_node *document, writer_format writer, int options) {
   char *result;
 
   switch (writer) {
@@ -49,10 +47,10 @@ static void render_topic(cssg_node *document, writer_format writer,
     result = cssg_render_xml(document, options);
     break;
   case FORMAT_MAN:
-    result = cssg_render_man(document, options, width);
+    result = cssg_render_man(document, options, 0);
     break;
   case FORMAT_COMMONMARK:
-    result = cssg_render_commonmark(document, options, width);
+    result = cssg_render_commonmark(document, options, 0);
     break;
   default:
     fprintf(stderr, "Unknown format %d\n", writer);
@@ -63,15 +61,11 @@ static void render_topic(cssg_node *document, writer_format writer,
 }
 
 int main(int argc, char *argv[]) {
-  int i, numfps = 0;
   int *files;
   char buffer[4096];
   cssg_parser *parser;
   size_t bytes;
   cssg_node *document;
-  int width = 0;
-  char *unparsed;
-  writer_format writer = FORMAT_HTML;
   int options = CSSG_OPT_DEFAULT;
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
@@ -81,102 +75,28 @@ int main(int argc, char *argv[]) {
 
   files = (int *)calloc(argc, sizeof(*files));
 
-  for (i = 1; i < argc; i++) {
-    if (strcmp(argv[i], "--version") == 0) {
-      printf("cssg %s", CSSG_VERSION_STRING);
-      printf(" - CommonMark converter\n(C) 2014-2016 John MacFarlane\n");
-      exit(0);
-    } else if (strcmp(argv[i], "--sourcepos") == 0) {
-      options |= CSSG_OPT_SOURCEPOS;
-    } else if (strcmp(argv[i], "--hardbreaks") == 0) {
-      options |= CSSG_OPT_HARDBREAKS;
-    } else if (strcmp(argv[i], "--nobreaks") == 0) {
-      options |= CSSG_OPT_NOBREAKS;
-    } else if (strcmp(argv[i], "--smart") == 0) {
-      options |= CSSG_OPT_SMART;
-    } else if (strcmp(argv[i], "--safe") == 0) {
-      options |= CSSG_OPT_SAFE;
-    } else if (strcmp(argv[i], "--unsafe") == 0) {
-      options |= CSSG_OPT_UNSAFE;
-    } else if (strcmp(argv[i], "--validate-utf8") == 0) {
-      options |= CSSG_OPT_VALIDATE_UTF8;
-    } else if ((strcmp(argv[i], "--help") == 0) ||
-               (strcmp(argv[i], "-h") == 0)) {
-      print_usage();
-      exit(0);
-    } else if (strcmp(argv[i], "--width") == 0) {
-      i += 1;
-      if (i < argc) {
-        width = (int)strtol(argv[i], &unparsed, 10);
-        if (unparsed && strlen(unparsed) > 0) {
-          fprintf(stderr, "failed parsing width '%s' at '%s'\n", argv[i],
-                  unparsed);
-          exit(1);
-        }
-      } else {
-        fprintf(stderr, "--width requires an argument\n");
-        exit(1);
-      }
-    } else if ((strcmp(argv[i], "-t") == 0) || (strcmp(argv[i], "--to") == 0)) {
-      i += 1;
-      if (i < argc) {
-        if (strcmp(argv[i], "man") == 0) {
-          writer = FORMAT_MAN;
-        } else if (strcmp(argv[i], "html") == 0) {
-          writer = FORMAT_HTML;
-        } else if (strcmp(argv[i], "xml") == 0) {
-          writer = FORMAT_XML;
-        } else if (strcmp(argv[i], "commonmark") == 0) {
-          writer = FORMAT_COMMONMARK;
-        } else {
-          fprintf(stderr, "Unknown format %s\n", argv[i]);
-          exit(1);
-        }
-      } else {
-        fprintf(stderr, "No argument provided for %s\n", argv[i - 1]);
-        exit(1);
-      }
-    } else if (*argv[i] == '-') {
-      print_usage();
-      exit(1);
-    } else { // treat as file argument
-      files[numfps++] = i;
-    }
-  }
-
   parser = cssg_parser_new(options);
-  for (i = 0; i < numfps; i++) {
-    FILE *fp = fopen(argv[files[i]], "rb");
-    if (fp == NULL) {
-      fprintf(stderr, "Error opening file %s: %s\n", argv[files[i]],
-              strerror(errno));
-      exit(1);
-    }
 
-    while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
-      cssg_parser_feed(parser, buffer, bytes);
-      if (bytes < sizeof(buffer)) {
-        break;
-      }
-    }
-
-    fclose(fp);
+  FILE *fp = fopen(argv[1], "rb");
+  if (fp == NULL) {
+    fprintf(stderr, "Error opening file %s: %s\n", argv[1], strerror(errno));
+    exit(1);
   }
 
-  if (numfps == 0) {
-
-    while ((bytes = fread(buffer, 1, sizeof(buffer), stdin)) > 0) {
-      cssg_parser_feed(parser, buffer, bytes);
-      if (bytes < sizeof(buffer)) {
-        break;
-      }
+  while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+    cssg_parser_feed(parser, buffer, bytes);
+    if (bytes < sizeof(buffer)) {
+      break;
     }
   }
+
+  fclose(fp);
 
   document = cssg_parser_finish(parser);
   cssg_parser_free(parser);
 
-  render_topic(document, writer, options, width);
+  // writer options: FORMAT_MAN, FORMAT_HTML, FORMAT_XML, FORMAT_COMMONMARK
+  render_topic(document, FORMAT_HTML, options);
 
   cssg_node_free(document);
 
