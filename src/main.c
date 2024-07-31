@@ -21,7 +21,10 @@ typedef enum {
   FORMAT_COMMONMARK,
 } writer_format;
 
-const char *fList[2] = {
+#define MAX_FILENAME_LENGTH 256
+#define MAX_FILES 100
+
+const char *testFiles[2] = {
   "short-sample.md",
   "test.md"
 };
@@ -66,6 +69,9 @@ static void render_topic(cssg_node *document, writer_format writer, int options)
 }
 
 int main(int argc, char *argv[]) {
+  FILE *testFiles;
+  char fList[MAX_FILES][MAX_FILENAME_LENGTH];
+  int fileCount = 0;
   int *files;
   char buffer[8192];
   cssg_parser *parser;
@@ -78,14 +84,32 @@ int main(int argc, char *argv[]) {
   _setmode(_fileno(stdout), _O_BINARY);
 #endif
 
-  for (int i = 0; i < (int)(sizeof(fList)/sizeof(fList[0])); i++) {
+  testFiles = fopen("iaList.txt", "r");
+  if (testFiles == NULL) {
+    fprintf(stderr, "Error opening file %s: %s %s\n", "iaList.txt", strerror(errno), argv[1]);
+    exit(1);
+  }
+
+  while (fgets(fList[fileCount], MAX_FILENAME_LENGTH, testFiles) != NULL && fileCount < MAX_FILES) {
+    // Remove the newline character from the filename, if present
+    fList[fileCount][strcspn(fList[fileCount], "\n")] = '\0';
+    fileCount++;
+  }
+
+  // Close the list file
+  fclose(testFiles);
+
+  for (int i = 0; i < fileCount; i++) {
     files = (int *)calloc(argc, sizeof(*files));
 
     parser = cssg_parser_new(options);
 
-    FILE *fp = fopen(fList[i], "rb");
+    char path[MAX_FILENAME_LENGTH] = "";
+    strcat(path, "topics/");
+    strcat(path, fList[i]);
+    FILE *fp = fopen(path, "rb");
     if (fp == NULL) {
-      fprintf(stderr, "Error opening file %s: %s\n", argv[1], strerror(errno));
+      fprintf(stderr, "Error opening file %s: %s\n", fList[i], strerror(errno));
       exit(1);
     }
 
