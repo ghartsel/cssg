@@ -11,6 +11,8 @@
 #include <fcntl.h>
 #endif
 
+#include "toml.h"
+
 typedef enum {
   FORMAT_NONE,
   FORMAT_HTML,
