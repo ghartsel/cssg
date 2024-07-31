@@ -23,6 +23,7 @@ add_library(cssg
   render.c
   scanners.c
   scanners.re
+  toml.c
   utf8.c
   xml.c)
 cssg_add_compile_options(cssg)
