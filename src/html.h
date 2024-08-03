@@ -21,9 +21,9 @@ char *htmlHead =
 <meta name=\"generator\" content=\"cssg 0.0.1\">\n\
 <title>DVARIABLE</title>\n\
 <link rel=\"canonical\" href=\"https://docs.fauna.com/fauna/current/get_started/index.html\">\n\
-<link rel=\"stylesheet\" href=\"../theme/css/cssg.css\">\n\
-<link rel=\"icon\" href=\"../theme/images/favicon.svg\">\n\
-<script src=\"../theme/js/cssg.js\"></script>\n\
+<link rel=\"stylesheet\" href=\"theme/css/cssg.css\">\n\
+<link rel=\"icon\" href=\"theme/images/favicon.svg\">\n\
+<script src=\"theme/js/cssg.js\"></script>\n\
 </head>\n";
 
 char *bodyOpen =

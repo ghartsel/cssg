@@ -191,11 +191,8 @@ static int S_render_node(cssg_node *node, cssg_event_type ev_type,
 
   case CSSG_NODE_HTML_BLOCK:
     cr(html);
-    if (!(options & CSSG_OPT_UNSAFE)) {
-      cssg_strbuf_puts(html, "<!-- raw HTML omitted -->");
-    } else {
-      cssg_strbuf_put(html, node->data, node->len);
-    }
+    // support <TABLE> as raw HTML; markdown is just HTML shorthand anyway
+    cssg_strbuf_put(html, node->data, node->len);
     cr(html);
     break;
 
@@ -262,11 +259,7 @@ static int S_render_node(cssg_node *node, cssg_event_type ev_type,
     break;
 
   case CSSG_NODE_HTML_INLINE:
-    if (!(options & CSSG_OPT_UNSAFE)) {
-      cssg_strbuf_puts(html, "<!-- raw HTML omitted -->");
-    } else {
-      cssg_strbuf_put(html, node->data, node->len);
-    }
+    cssg_strbuf_put(html, node->data, node->len);
     break;
 
   case CSSG_NODE_CUSTOM_INLINE: {
@@ -315,9 +308,8 @@ static int S_render_node(cssg_node *node, cssg_event_type ev_type,
 
   case CSSG_NODE_IMAGE:
     if (entering) {
-      cssg_strbuf_puts(html, "<img src=\"");
-      if (node->as.link.url && ((options & CSSG_OPT_UNSAFE) ||
-                                !(_scan_dangerous_url(node->as.link.url)))) {
+      cssg_strbuf_puts(html, "<img src=\"publish/static/images/");
+      if (node->as.link.url) {
         houdini_escape_href(html, node->as.link.url,
                             (bufsize_t)strlen((char *)node->as.link.url));
       }
